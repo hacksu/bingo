@@ -28,6 +28,9 @@ services:
       NODE_ENV: production
       PORT: 3000
       HOST: 0.0.0.0
+      # Tell SvelteKit's adapter-node what its public origin is — fixes 403
+      # CSRF rejections when the Host header doesn't match the browser-facing URL.
+      ORIGIN: ${BETTER_AUTH_URL}
       DATABASE_URL: postgres://${POSTGRES_USER:-bingo}:${POSTGRES_PASSWORD:-bingo}@db:5432/${POSTGRES_DB:-bingo}
       BETTER_AUTH_URL: ${BETTER_AUTH_URL}
       BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET}
