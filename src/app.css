@@ -1,0 +1,12 @@
+@import 'tailwindcss';
+
+@theme {
+  --font-display: 'Inter', system-ui, sans-serif;
+  --color-hacksu-green: #34d399;
+  --color-hacksu-blue: #2563eb;
+}
+
+html,
+body {
+  height: 100%;
+}
