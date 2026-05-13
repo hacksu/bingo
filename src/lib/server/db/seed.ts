@@ -1,8 +1,8 @@
 /**
  * Seed default HACKSU bingo tiles.
  * Run with: bun run db:seed
+ * Bun auto-loads `.env` for local runs; in Docker the vars come from Compose.
  */
-import 'dotenv/config';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { randomUUID } from 'node:crypto';
@@ -30,8 +30,8 @@ const TILES: { label: string; isFreeSpace?: boolean }[] = [
   { label: 'Follow us on Facebook' },
 
   { label: 'Share HacKSU with a friend' },
-  { label: 'FREE SPACE', isFreeSpace: true },
   { label: 'Demo Personal Website / Project' },
+  { label: 'FREE SPACE', isFreeSpace: true },
   { label: '"Hello World" in 4 languages' },
   { label: 'Join the mailing list' },
 
