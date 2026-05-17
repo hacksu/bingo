@@ -16,6 +16,9 @@
   <nav class="flex items-center gap-4 text-sm">
     {#if data.user}
       <a href="/bingo" class="hover:underline">My Card</a>
+      {#if data.user.role === 'admin'}
+        <a href="/admin" class="hover:underline text-amber-300">Admin</a>
+      {/if}
       <span class="opacity-80">Hi, {data.user.name}</span>
       <button
         onclick={handleSignOut}

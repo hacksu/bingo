@@ -8,10 +8,16 @@ export const auth = betterAuth({
   baseURL: env.BETTER_AUTH_URL,
   secret: env.BETTER_AUTH_SECRET,
   trustedOrigins: env.BETTER_AUTH_URL ? [env.BETTER_AUTH_URL] : [],
+  user: {
+    additionalFields: {
+      role: { type: 'string', defaultValue: 'user', input: false }
+    }
+  },
   socialProviders: {
     discord: {
       clientId: env.DISCORD_CLIENT_ID ?? '',
-      clientSecret: env.DISCORD_CLIENT_SECRET ?? ''
+      clientSecret: env.DISCORD_CLIENT_SECRET ?? '',
+      scope: ['identify', 'email', 'guilds.members.read']
     },
     github: {
       clientId: env.GITHUB_CLIENT_ID ?? '',
