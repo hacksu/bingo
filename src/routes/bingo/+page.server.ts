@@ -2,7 +2,7 @@ import { error, fail, redirect } from '@sveltejs/kit';
 import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
-import { bingoProgress, bingoTile } from '$lib/server/db/schema';
+import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
 import type { Actions, PageServerLoad } from './$types';
 
@@ -20,6 +20,12 @@ export const load: PageServerLoad = async ({ locals }) => {
     .from(bingoProgress)
     .where(eq(bingoProgress.userId, locals.user.id));
 
+  const [me] = await db
+    .select({ bingoVerifiedAt: user.bingoVerifiedAt })
+    .from(user)
+    .where(eq(user.id, locals.user.id))
+    .limit(1);
+
   const completed = new Set(progress.map((p) => p.tileId));
 
   const completedPositions = new Set<number>();
@@ -34,7 +40,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       completed: completed.has(t.id) || t.isFreeSpace,
       winning: winningPositions.has(t.position)
     })),
-    hasBingo
+    hasBingo,
+    verifiedAt: me?.bingoVerifiedAt ?? null
   };
 };
 

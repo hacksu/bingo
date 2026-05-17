@@ -6,17 +6,18 @@
   <h1 class="text-3xl font-extrabold">Users</h1>
   <p class="text-sm opacity-80">
     {data.users.length} players · {data.tileCount} active tiles
-    {#if data.bingoCount > 0}
-      · <span class="text-yellow-300 font-bold">{data.bingoCount} awaiting bingo verification</span>
+    {#if data.pendingCount > 0}
+      · <span class="text-yellow-300 font-bold">{data.pendingCount} pending verification</span>
+    {/if}
+    {#if data.verifiedCount > 0}
+      · <span class="text-emerald-300 font-bold">{data.verifiedCount} verified</span>
     {/if}
   </p>
 </header>
 
-{#if data.bingoCount > 0}
-  <div
-    class="rounded-lg bg-yellow-400 text-yellow-950 px-4 py-3 font-bold ring-4 ring-yellow-300"
-  >
-    🎉 {data.bingoCount} player{data.bingoCount === 1 ? '' : 's'} hit BINGO — verify their card{data.bingoCount === 1 ? '' : 's'} below.
+{#if data.pendingCount > 0}
+  <div class="rounded-lg bg-yellow-400 text-yellow-950 px-4 py-3 font-bold ring-4 ring-yellow-300">
+    🎉 {data.pendingCount} player{data.pendingCount === 1 ? '' : 's'} hit BINGO — verify their card{data.pendingCount === 1 ? '' : 's'} below.
   </div>
 {/if}
 
@@ -35,12 +36,20 @@
     <tbody>
       {#each data.users as u (u.id)}
         <tr
-          class="border-t border-white/10 {u.hasBingo
+          class="border-t border-white/10 {u.hasBingo && !u.verified
             ? 'bg-yellow-400/15 hover:bg-yellow-400/20'
-            : ''}"
+            : u.verified
+              ? 'bg-emerald-400/10 hover:bg-emerald-400/20'
+              : ''}"
         >
           <td class="px-4 py-2">
-            {#if u.hasBingo}
+            {#if u.verified}
+              <span
+                class="rounded-full bg-emerald-500 text-emerald-950 px-2 py-0.5 text-xs font-extrabold"
+              >
+                ✓ VERIFIED
+              </span>
+            {:else if u.hasBingo}
               <span
                 class="rounded-full bg-yellow-400 text-yellow-950 px-2 py-0.5 text-xs font-extrabold"
               >
@@ -63,11 +72,13 @@
             <a
               href="/admin/users/{u.id}"
               class="rounded-md px-3 py-1 font-semibold
-                     {u.hasBingo
+                     {u.hasBingo && !u.verified
                 ? 'bg-yellow-400 text-yellow-950 hover:bg-yellow-300'
-                : 'bg-white text-blue-700 hover:bg-white/90'}"
+                : u.verified
+                  ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400'
+                  : 'bg-white text-blue-700 hover:bg-white/90'}"
             >
-              {u.hasBingo ? 'Verify' : 'View card'}
+              {u.hasBingo && !u.verified ? 'Verify' : u.verified ? 'View' : 'View card'}
             </a>
           </td>
         </tr>

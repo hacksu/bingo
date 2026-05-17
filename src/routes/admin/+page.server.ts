@@ -31,6 +31,7 @@ export const load: PageServerLoad = async () => {
       count: 0
     };
     const { hasBingo } = detectBingo(entry.positions);
+    const verified = !!u.bingoVerifiedAt;
     return {
       id: u.id,
       name: u.name,
@@ -38,16 +39,26 @@ export const load: PageServerLoad = async () => {
       image: u.image,
       role: u.role,
       completed: entry.count,
-      hasBingo
+      hasBingo,
+      verified,
+      verifiedAt: u.bingoVerifiedAt,
+      // Highest priority: unverified bingos (needs admin action).
+      // Then verified bingos. Then everyone else.
+      sortRank: hasBingo && !verified ? 2 : hasBingo && verified ? 1 : 0
     };
   });
 
   rows.sort(
     (a, b) =>
-      Number(b.hasBingo) - Number(a.hasBingo) ||
+      b.sortRank - a.sortRank ||
       b.completed - a.completed ||
       a.name.localeCompare(b.name)
   );
 
-  return { users: rows, tileCount: tiles.length, bingoCount: rows.filter((r) => r.hasBingo).length };
+  return {
+    users: rows,
+    tileCount: tiles.length,
+    pendingCount: rows.filter((r) => r.hasBingo && !r.verified).length,
+    verifiedCount: rows.filter((r) => r.verified).length
+  };
 };

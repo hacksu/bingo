@@ -3,6 +3,8 @@
   import { GRID_SIZE } from '$lib/bingo';
 
   let { data } = $props();
+
+  const isVerified = $derived(!!data.verifiedAt);
 </script>
 
 <section class="mx-auto max-w-3xl space-y-6">
@@ -11,7 +13,14 @@
     <p class="opacity-80 text-sm">Click a tile to mark it complete.</p>
   </header>
 
-  {#if data.hasBingo}
+  {#if isVerified && data.hasBingo}
+    <div class="rounded-xl bg-emerald-500 text-emerald-950 px-5 py-4 text-center ring-4 ring-emerald-300">
+      <div class="text-2xl font-extrabold tracking-wider">✓ VERIFIED BINGO</div>
+      <div class="text-sm font-semibold">
+        Confirmed by an organizer on {new Date(data.verifiedAt!).toLocaleString()}.
+      </div>
+    </div>
+  {:else if data.hasBingo}
     <div
       class="rounded-xl bg-yellow-400 text-yellow-950 px-5 py-4 text-center ring-4 ring-yellow-300 animate-pulse"
     >
@@ -36,7 +45,9 @@
                  text-[0.7rem] sm:text-xs font-bold leading-tight p-2 transition
                  {tile.completed
             ? tile.winning
-              ? 'bg-yellow-400 text-yellow-950 ring-4 ring-yellow-300'
+              ? isVerified
+                ? 'bg-emerald-400 text-emerald-950 ring-4 ring-emerald-300'
+                : 'bg-yellow-400 text-yellow-950 ring-4 ring-yellow-300'
               : 'bg-red-500/90 text-white ring-4 ring-red-300'
             : 'bg-white text-slate-800 hover:bg-white/90'}
                  {tile.isFreeSpace ? 'cursor-default' : 'cursor-pointer'}"

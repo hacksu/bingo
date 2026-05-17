@@ -10,6 +10,8 @@ export const user = pgTable('user', {
   emailVerified: boolean('email_verified').notNull().default(false),
   image: text('image'),
   role: text('role').notNull().default('user'),
+  bingoVerifiedAt: timestamp('bingo_verified_at'),
+  bingoVerifiedBy: text('bingo_verified_by'),
   createdAt: timestamp('created_at').notNull().defaultNow(),
   updatedAt: timestamp('updated_at').notNull().defaultNow()
 });
