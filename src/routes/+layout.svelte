@@ -11,25 +11,25 @@
   }
 </script>
 
-<header class="flex items-center justify-between px-6 py-4 border-b border-white/20">
-  <a href="/" class="text-2xl font-extrabold tracking-wide">HACKSU BINGO</a>
+<header class="flex items-center justify-between px-6 py-4 border-b border-white/10">
+  <a href="/" class="text-2xl font-extrabold tracking-wide text-emerald-200">HACKSU BINGO</a>
   <nav class="flex items-center gap-4 text-sm">
     {#if data.user}
-      <a href="/bingo" class="hover:underline">My Card</a>
+      <a href="/bingo" class="hover:text-white text-slate-300 transition">My Card</a>
       {#if data.user.role === 'admin'}
-        <a href="/admin" class="hover:underline text-amber-300">Admin</a>
+        <a href="/admin" class="hover:text-amber-200 text-amber-300 transition">Admin</a>
       {/if}
-      <span class="opacity-80">Hi, {data.user.name}</span>
+      <span class="text-slate-400">Hi, {data.user.name}</span>
       <button
         onclick={handleSignOut}
-        class="rounded-md bg-white/10 hover:bg-white/20 px-3 py-1.5 transition"
+        class="rounded-md bg-white/5 hover:bg-white/10 px-3 py-1.5 border border-white/10 transition"
       >
         Sign out
       </button>
     {:else}
       <a
         href="/login"
-        class="rounded-md bg-white text-blue-700 hover:bg-white/90 px-3 py-1.5 font-semibold transition"
+        class="rounded-md bg-emerald-500 text-emerald-950 hover:bg-emerald-400 px-3 py-1.5 font-semibold transition"
       >
         Sign in
       </a>

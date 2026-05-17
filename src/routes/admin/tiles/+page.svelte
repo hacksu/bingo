@@ -4,27 +4,27 @@
   let { data } = $props();
 </script>
 
-<header class="space-y-1">
-  <h1 class="text-3xl font-extrabold">Tiles</h1>
-  <p class="text-sm opacity-80">Edit labels, reorder by position, toggle active/free-space.</p>
+<header class="space-y-1 text-center">
+  <h1 class="text-3xl font-extrabold tracking-tight">Tiles</h1>
+  <p class="text-sm text-slate-300">Edit labels, reorder by position, toggle active/free-space.</p>
 </header>
 
 <form
   method="POST"
   action="?/create"
   use:enhance
-  class="flex flex-wrap gap-2 items-center rounded-lg border border-white/20 p-3"
+  class="flex flex-wrap gap-2 items-center rounded-lg border border-white/10 bg-white/5 p-3"
 >
   <input
     type="text"
     name="label"
     placeholder="New tile label"
     required
-    class="flex-1 min-w-[16rem] rounded-md bg-white/10 px-3 py-2 placeholder:opacity-60"
+    class="flex-1 min-w-64 rounded-md bg-slate-900/60 border border-white/10 text-slate-100 px-3 py-2 placeholder:text-slate-400"
   />
   <button
     type="submit"
-    class="rounded-md bg-white text-blue-700 font-semibold px-4 py-2 hover:bg-white/90"
+    class="rounded-md bg-emerald-500 text-emerald-950 font-semibold px-4 py-2 hover:bg-emerald-400 transition"
   >
     Add tile
   </button>
@@ -52,9 +52,9 @@
   {/each}
 </div>
 
-<div class="overflow-x-auto rounded-lg border border-white/20">
+<div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5">
   <table class="w-full text-sm">
-    <thead class="bg-white/10 text-left">
+    <thead class="bg-white/5 text-left text-slate-300 uppercase text-xs tracking-wider">
       <tr>
         <th class="px-3 py-2 w-16">Pos</th>
         <th class="px-3 py-2">Label</th>
@@ -65,7 +65,7 @@
     </thead>
     <tbody>
       {#each data.tiles as tile (tile.id)}
-        <tr class="border-t border-white/10">
+        <tr class="border-t border-white/10 hover:bg-white/5">
           <td class="px-3 py-2">
             <input
               type="number"
@@ -73,7 +73,7 @@
               value={tile.position}
               min="0"
               form="upd-{tile.id}"
-              class="w-16 rounded-md bg-white/10 px-2 py-1"
+              class="w-16 rounded-md bg-slate-900/60 border border-white/10 text-slate-100 px-2 py-1"
             />
           </td>
           <td class="px-3 py-2">
@@ -83,7 +83,7 @@
               value={tile.label}
               required
               form="upd-{tile.id}"
-              class="w-full rounded-md bg-white/10 px-2 py-1"
+              class="w-full rounded-md bg-slate-900/60 border border-white/10 text-slate-100 px-2 py-1"
             />
           </td>
           <td class="px-3 py-2 text-center">
@@ -101,14 +101,14 @@
             <button
               type="submit"
               form="upd-{tile.id}"
-              class="rounded-md bg-white text-blue-700 font-semibold px-3 py-1 hover:bg-white/90"
+              class="rounded-md bg-emerald-500 text-emerald-950 font-semibold px-3 py-1 hover:bg-emerald-400 transition"
             >
               Save
             </button>
             <button
               type="submit"
               form="del-{tile.id}"
-              class="rounded-md bg-red-500/80 text-white font-semibold px-3 py-1 hover:bg-red-500"
+              class="rounded-md bg-rose-500/80 text-white font-semibold px-3 py-1 hover:bg-rose-500 transition"
             >
               Delete
             </button>

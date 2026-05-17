@@ -11,77 +11,87 @@
   let verifyForm: HTMLFormElement | undefined = $state();
   let resetArmed = $state(false);
 
-  const hasAnyProgress = $derived(
-    data.tiles.some((t) => t.selfMarked) || isVerified
-  );
+  const hasAnyProgress = $derived(data.tiles.some((t) => t.selfMarked) || isVerified);
 </script>
 
 <header class="flex items-center gap-4">
-  <a href="/admin" class="text-sm opacity-80 hover:underline">← Users</a>
+  <a href="/admin" class="text-sm text-slate-300 hover:text-white transition">← Users</a>
 </header>
 
 <div class="flex flex-wrap items-center gap-4">
   {#if data.target.image}
-    <img src={data.target.image} alt="" class="h-12 w-12 rounded-full" />
+    <img src={data.target.image} alt="" class="h-12 w-12 rounded-full ring-1 ring-white/20" />
   {/if}
   <div>
-    <h1 class="text-2xl font-extrabold">{data.target.name}</h1>
-    <p class="text-sm opacity-80">{data.target.email}</p>
+    <h1 class="text-2xl font-extrabold tracking-tight">{data.target.name}</h1>
+    <p class="text-sm text-slate-300">{data.target.email}</p>
   </div>
-  <span class="ml-auto rounded-md bg-white/10 px-3 py-1 text-sm">
+  <span class="ml-auto rounded-md bg-white/5 border border-white/10 px-3 py-1 text-sm text-slate-200">
     {completedCount} / {data.tiles.filter((t) => t.isActive && !t.isFreeSpace).length} marked
   </span>
 </div>
 
 {#if isVerified && data.hasBingo}
-  <div class="rounded-xl bg-emerald-500 text-emerald-950 px-5 py-4 ring-4 ring-emerald-300 space-y-3">
-    <div class="text-xl font-extrabold">✓ Verified</div>
-    <div class="text-sm font-semibold opacity-90">
+  <div
+    class="rounded-xl bg-emerald-500/15 border border-emerald-400/40 px-5 py-4 space-y-3 text-center"
+  >
+    <div class="text-lg font-extrabold tracking-wide text-emerald-200">Verified</div>
+    <div class="text-sm text-emerald-100/80">
       Verified at {new Date(data.target.bingoVerifiedAt!).toLocaleString()}.
     </div>
     <form method="POST" action="?/unverify" use:enhance>
       <button
         type="submit"
-        class="rounded-md bg-emerald-950 text-emerald-100 font-semibold px-3 py-1.5 hover:bg-emerald-900"
+        class="rounded-md bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 font-semibold px-4 py-1.5 hover:bg-emerald-500/30 transition"
       >
         Unverify
       </button>
     </form>
   </div>
 {:else if isVerified && !data.hasBingo}
-  <div class="rounded-xl bg-orange-400 text-orange-950 px-5 py-4 ring-4 ring-orange-300 space-y-3">
-    <div class="text-xl font-extrabold">⚠ Verified, but card no longer shows bingo</div>
-    <div class="text-sm font-semibold opacity-90">
+  <div
+    class="rounded-xl bg-amber-500/15 border border-amber-400/40 px-5 py-4 space-y-3 text-center"
+  >
+    <div class="text-lg font-extrabold tracking-wide text-amber-200">
+      Verified, but card no longer shows bingo
+    </div>
+    <div class="text-sm text-amber-100/80">
       The player toggled a tile after being verified. Unverify, or wait for them to restore.
     </div>
     <form method="POST" action="?/unverify" use:enhance>
       <button
         type="submit"
-        class="rounded-md bg-orange-950 text-orange-100 font-semibold px-3 py-1.5 hover:bg-orange-900"
+        class="rounded-md bg-amber-500/20 border border-amber-400/40 text-amber-100 font-semibold px-4 py-1.5 hover:bg-amber-500/30 transition"
       >
         Unverify
       </button>
     </form>
   </div>
 {:else if data.hasBingo}
-  <div class="rounded-xl bg-yellow-400 text-yellow-950 px-5 py-5 ring-4 ring-yellow-300 space-y-3">
-    <div class="text-xl font-extrabold">🎉 BINGO — winning line highlighted</div>
-    <p class="text-sm font-semibold opacity-90">
+  <div
+    class="rounded-xl bg-amber-500/15 border border-amber-400/40 px-5 py-5 space-y-4 text-center"
+  >
+    <div class="text-lg font-extrabold tracking-wide text-amber-200">
+      Bingo — winning line highlighted
+    </div>
+    <p class="text-sm text-amber-100/80 max-w-prose mx-auto">
       Look the card over. If the player legitimately earned these tiles, slide to verify.
     </p>
     <form method="POST" action="?/verify" use:enhance bind:this={verifyForm}>
       <SlideToConfirm
         label="Slide to verify {data.target.name}'s bingo"
-        confirmedLabel="✓ Verifying…"
+        confirmedLabel="Verifying"
         onconfirm={() => verifyForm?.requestSubmit()}
       />
     </form>
     {#if form?.message}
-      <p class="text-sm font-semibold text-red-900">{form.message}</p>
+      <p class="text-sm font-semibold text-rose-300">{form.message}</p>
     {/if}
   </div>
 {:else}
-  <div class="rounded-lg bg-white/10 px-4 py-3 text-sm opacity-80">
+  <div
+    class="rounded-lg bg-white/5 border border-white/10 px-4 py-3 text-sm text-slate-300 text-center"
+  >
     Player has not completed a bingo yet.
   </div>
 {/if}
@@ -96,9 +106,9 @@
              text-[0.7rem] sm:text-xs font-bold leading-tight p-2
              {tile.completed
         ? tile.winning
-          ? 'bg-yellow-400 text-yellow-950 ring-4 ring-yellow-300'
-          : 'bg-emerald-500/90 text-white ring-4 ring-emerald-300'
-        : 'bg-white text-slate-800'}"
+          ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
+          : 'bg-emerald-500 text-emerald-950'
+        : 'bg-slate-100 text-slate-800'}"
       title={tile.isFreeSpace ? 'Free space' : tile.label}
     >
       {tile.label}
@@ -107,10 +117,12 @@
 </div>
 
 {#if hasAnyProgress}
-  <div class="rounded-xl border-2 border-red-500/50 bg-red-500/10 px-5 py-4 space-y-3">
+  <div
+    class="rounded-xl border border-rose-400/30 bg-rose-500/10 px-5 py-4 space-y-3 text-center"
+  >
     <div>
-      <div class="font-extrabold text-red-200">Reset card</div>
-      <p class="text-sm opacity-80">
+      <div class="font-extrabold text-rose-200 tracking-wide">Reset card</div>
+      <p class="text-sm text-rose-100/80 mt-1">
         Clears every tile {data.target.name} has marked{isVerified
           ? ' and removes their verification'
           : ''}. Cannot be undone.
@@ -121,13 +133,13 @@
       <button
         type="button"
         onclick={() => (resetArmed = true)}
-        class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+        class="rounded-md bg-rose-500 text-white font-semibold px-5 py-2 hover:bg-rose-400 transition"
       >
         Reset card
       </button>
     {:else}
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="text-sm font-bold text-red-200">
+      <div class="flex flex-wrap items-center justify-center gap-2">
+        <span class="text-sm font-semibold text-rose-200">
           Really reset {data.target.name}'s card?
         </span>
         <form
@@ -142,7 +154,7 @@
         >
           <button
             type="submit"
-            class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+            class="rounded-md bg-rose-500 text-white font-semibold px-5 py-2 hover:bg-rose-400 transition"
           >
             Yes, reset
           </button>
@@ -150,7 +162,7 @@
         <button
           type="button"
           onclick={() => (resetArmed = false)}
-          class="rounded-md bg-white/10 text-white font-semibold px-4 py-2.5 hover:bg-white/20 transition"
+          class="rounded-md bg-white/5 border border-white/10 text-slate-200 font-semibold px-4 py-2 hover:bg-white/10 transition"
         >
           Cancel
         </button>

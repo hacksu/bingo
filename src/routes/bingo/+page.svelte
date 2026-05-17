@@ -12,24 +12,26 @@
 
 <section class="mx-auto max-w-3xl space-y-6">
   <header class="text-center space-y-1">
-    <h1 class="text-4xl font-extrabold">Your Bingo Card</h1>
-    <p class="opacity-80 text-sm">Click a tile to mark it complete.</p>
+    <h1 class="text-4xl font-extrabold tracking-tight">Your Bingo Card</h1>
+    <p class="text-slate-300 text-sm">Tap a tile to mark it complete.</p>
   </header>
 
   {#if isVerified && data.hasBingo}
-    <div class="rounded-xl bg-emerald-500 text-emerald-950 px-5 py-4 text-center ring-4 ring-emerald-300">
-      <div class="text-2xl font-extrabold tracking-wider">✓ VERIFIED BINGO</div>
-      <div class="text-sm font-semibold">
+    <div
+      class="rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-100 px-5 py-4 text-center"
+    >
+      <div class="text-xl font-extrabold tracking-wider text-emerald-200">VERIFIED BINGO</div>
+      <div class="text-sm text-emerald-100/80 mt-1">
         Confirmed by an organizer on {new Date(data.verifiedAt!).toLocaleString()}.
       </div>
     </div>
   {:else if data.hasBingo}
     <div
-      class="rounded-xl bg-yellow-400 text-yellow-950 px-5 py-4 text-center ring-4 ring-yellow-300 animate-pulse"
+      class="rounded-xl bg-amber-500/15 border border-amber-400/40 text-amber-100 px-5 py-4 text-center"
     >
-      <div class="text-2xl font-extrabold tracking-wider">🎉 BINGO!</div>
-      <div class="text-sm font-semibold">
-        Show this screen to a HacKSU organizer to claim your prize.
+      <div class="text-xl font-extrabold tracking-wider text-amber-200">BINGO</div>
+      <div class="text-sm text-amber-100/80 mt-1">
+        Show this screen to a HacKSU Leader to claim your prize.
       </div>
     </div>
   {/if}
@@ -49,10 +51,10 @@
                  {tile.completed
             ? tile.winning
               ? isVerified
-                ? 'bg-emerald-400 text-emerald-950 ring-4 ring-emerald-300'
-                : 'bg-yellow-400 text-yellow-950 ring-4 ring-yellow-300'
-              : 'bg-red-500/90 text-white ring-4 ring-red-300'
-            : 'bg-white text-slate-800 hover:bg-white/90'}
+                ? 'bg-emerald-400 text-emerald-950 ring-2 ring-emerald-200'
+                : 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
+              : 'bg-emerald-500 text-emerald-950'
+            : 'bg-slate-100 text-slate-800 hover:bg-white'}
                  {tile.isFreeSpace ? 'cursor-default' : 'cursor-pointer'}"
         >
           {tile.label}
@@ -62,10 +64,12 @@
   </div>
 
   {#if hasAnyProgress}
-    <div class="rounded-xl border-2 border-red-500/50 bg-red-500/10 px-5 py-4 space-y-3">
+    <div
+      class="rounded-xl border border-rose-400/30 bg-rose-500/10 px-5 py-4 space-y-3 text-center"
+    >
       <div>
-        <div class="font-extrabold text-red-200">Reset card</div>
-        <p class="text-sm opacity-80">
+        <div class="font-extrabold text-rose-200 tracking-wide">Reset card</div>
+        <p class="text-sm text-rose-100/80 mt-1">
           Clears every tile you've marked{isVerified ? ' and removes your verification' : ''}.
           Cannot be undone.
         </p>
@@ -75,13 +79,13 @@
         <button
           type="button"
           onclick={() => (resetArmed = true)}
-          class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+          class="rounded-md bg-rose-500 text-white font-semibold px-5 py-2 hover:bg-rose-400 transition"
         >
           Reset card
         </button>
       {:else}
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-sm font-bold text-red-200">Really reset your card?</span>
+        <div class="flex flex-wrap items-center justify-center gap-2">
+          <span class="text-sm font-semibold text-rose-200">Really reset your card?</span>
           <form
             method="POST"
             action="?/reset"
@@ -94,7 +98,7 @@
           >
             <button
               type="submit"
-              class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+              class="rounded-md bg-rose-500 text-white font-semibold px-5 py-2 hover:bg-rose-400 transition"
             >
               Yes, reset
             </button>
@@ -102,7 +106,7 @@
           <button
             type="button"
             onclick={() => (resetArmed = false)}
-            class="rounded-md bg-white/10 text-white font-semibold px-4 py-2.5 hover:bg-white/20 transition"
+            class="rounded-md bg-white/5 border border-white/10 text-slate-200 font-semibold px-4 py-2 hover:bg-white/10 transition"
           >
             Cancel
           </button>

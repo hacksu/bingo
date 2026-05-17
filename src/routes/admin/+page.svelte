@@ -2,28 +2,33 @@
   let { data } = $props();
 </script>
 
-<header class="space-y-1">
-  <h1 class="text-3xl font-extrabold">Users</h1>
-  <p class="text-sm opacity-80">
+<header class="space-y-1 text-center">
+  <h1 class="text-3xl font-extrabold tracking-tight">Users</h1>
+  <p class="text-sm text-slate-300">
     {data.users.length} players · {data.tileCount} active tiles
     {#if data.pendingCount > 0}
-      · <span class="text-yellow-300 font-bold">{data.pendingCount} pending verification</span>
+      · <span class="text-amber-300 font-semibold">{data.pendingCount} pending</span>
     {/if}
     {#if data.verifiedCount > 0}
-      · <span class="text-emerald-300 font-bold">{data.verifiedCount} verified</span>
+      · <span class="text-emerald-300 font-semibold">{data.verifiedCount} verified</span>
     {/if}
   </p>
 </header>
 
 {#if data.pendingCount > 0}
-  <div class="rounded-lg bg-yellow-400 text-yellow-950 px-4 py-3 font-bold ring-4 ring-yellow-300">
-    🎉 {data.pendingCount} player{data.pendingCount === 1 ? '' : 's'} hit BINGO — verify their card{data.pendingCount === 1 ? '' : 's'} below.
+  <div
+    class="rounded-lg bg-amber-500/15 border border-amber-400/40 text-amber-100 px-4 py-3 text-center"
+  >
+    <span class="font-semibold text-amber-200">
+      {data.pendingCount} player{data.pendingCount === 1 ? '' : 's'} hit bingo
+    </span>
+    — verify their card{data.pendingCount === 1 ? '' : 's'} below.
   </div>
 {/if}
 
-<div class="overflow-x-auto rounded-lg border border-white/20">
+<div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5">
   <table class="w-full text-sm">
-    <thead class="bg-white/10 text-left">
+    <thead class="bg-white/5 text-left text-slate-300 uppercase text-xs tracking-wider">
       <tr>
         <th class="px-4 py-2">Status</th>
         <th class="px-4 py-2">Player</th>
@@ -37,48 +42,50 @@
       {#each data.users as u (u.id)}
         <tr
           class="border-t border-white/10 {u.hasBingo && !u.verified
-            ? 'bg-yellow-400/15 hover:bg-yellow-400/20'
+            ? 'bg-amber-400/10 hover:bg-amber-400/15'
             : u.verified
-              ? 'bg-emerald-400/10 hover:bg-emerald-400/20'
-              : ''}"
+              ? 'bg-emerald-400/5 hover:bg-emerald-400/10'
+              : 'hover:bg-white/5'}"
         >
           <td class="px-4 py-2">
             {#if u.verified}
               <span
-                class="rounded-full bg-emerald-500 text-emerald-950 px-2 py-0.5 text-xs font-extrabold"
+                class="rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 px-2 py-0.5 text-xs font-semibold tracking-wide"
               >
-                ✓ VERIFIED
+                VERIFIED
               </span>
             {:else if u.hasBingo}
               <span
-                class="rounded-full bg-yellow-400 text-yellow-950 px-2 py-0.5 text-xs font-extrabold"
+                class="rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2 py-0.5 text-xs font-semibold tracking-wide"
               >
                 BINGO
               </span>
             {/if}
           </td>
-          <td class="px-4 py-2 font-semibold">{u.name}</td>
-          <td class="px-4 py-2 opacity-80">{u.email}</td>
+          <td class="px-4 py-2 font-semibold text-slate-100">{u.name}</td>
+          <td class="px-4 py-2 text-slate-300">{u.email}</td>
           <td class="px-4 py-2">
             <span
-              class="rounded-full px-2 py-0.5 text-xs font-bold
-                     {u.role === 'admin' ? 'bg-amber-400 text-amber-950' : 'bg-white/10'}"
+              class="rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide
+                     {u.role === 'admin'
+                ? 'bg-amber-500/20 border border-amber-400/40 text-amber-200'
+                : 'bg-white/5 border border-white/10 text-slate-300'}"
             >
               {u.role}
             </span>
           </td>
-          <td class="px-4 py-2">{u.completed} / {data.tileCount}</td>
+          <td class="px-4 py-2 text-slate-200">{u.completed} / {data.tileCount}</td>
           <td class="px-4 py-2 text-right">
             <a
               href="/admin/users/{u.id}"
-              class="rounded-md px-3 py-1 font-semibold
+              class="rounded-md px-3 py-1 font-semibold transition
                      {u.hasBingo && !u.verified
-                ? 'bg-yellow-400 text-yellow-950 hover:bg-yellow-300'
+                ? 'bg-amber-400 text-amber-950 hover:bg-amber-300'
                 : u.verified
-                  ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400'
-                  : 'bg-white text-blue-700 hover:bg-white/90'}"
+                  ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30'
+                  : 'bg-white/10 border border-white/10 text-slate-100 hover:bg-white/15'}"
             >
-              {u.hasBingo && !u.verified ? 'Verify' : u.verified ? 'View' : 'View card'}
+              {u.hasBingo && !u.verified ? 'Verify' : 'View'}
             </a>
           </td>
         </tr>

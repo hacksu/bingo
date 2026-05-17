@@ -9,7 +9,7 @@
 
   let {
     label = 'Slide to confirm',
-    confirmedLabel = '✓ Confirmed',
+    confirmedLabel = 'Confirmed',
     onconfirm,
     disabled = false,
     variant = 'confirm'
@@ -18,28 +18,28 @@
   const palette = $derived(
     variant === 'danger'
       ? {
-          trackIdle: 'bg-red-200',
-          trackDisabled: 'bg-red-200/60',
-          trackDone: 'bg-red-300',
-          fillIdle: 'bg-red-300',
-          fillDone: 'bg-red-400',
-          textIdle: 'text-red-950/80',
-          textDone: 'text-red-950',
-          thumbIdle: 'bg-red-600 text-white',
-          thumbDisabled: 'bg-red-300 text-red-900',
-          thumbDone: 'bg-red-700 text-white'
+          trackIdle: 'bg-rose-950/40 border-rose-400/40',
+          trackDisabled: 'bg-rose-950/20 border-rose-400/20',
+          trackDone: 'bg-rose-700/60 border-rose-300/40',
+          fillIdle: 'bg-rose-600/70',
+          fillDone: 'bg-rose-600',
+          textIdle: 'text-rose-100',
+          textDone: 'text-white',
+          thumbIdle: 'bg-rose-500 text-white',
+          thumbDisabled: 'bg-rose-700 text-rose-200',
+          thumbDone: 'bg-rose-400 text-white'
         }
       : {
-          trackIdle: 'bg-yellow-200',
-          trackDisabled: 'bg-yellow-200/60',
-          trackDone: 'bg-emerald-300',
-          fillIdle: 'bg-yellow-300',
-          fillDone: 'bg-emerald-400',
-          textIdle: 'text-yellow-950/80',
-          textDone: 'text-emerald-950',
-          thumbIdle: 'bg-emerald-500 text-white',
-          thumbDisabled: 'bg-yellow-300 text-yellow-900',
-          thumbDone: 'bg-emerald-500 text-white'
+          trackIdle: 'bg-amber-950/40 border-amber-400/40',
+          trackDisabled: 'bg-amber-950/20 border-amber-400/20',
+          trackDone: 'bg-emerald-700/60 border-emerald-300/40',
+          fillIdle: 'bg-amber-500/60',
+          fillDone: 'bg-emerald-500/80',
+          textIdle: 'text-amber-100',
+          textDone: 'text-white',
+          thumbIdle: 'bg-amber-400 text-amber-950',
+          thumbDisabled: 'bg-amber-700 text-amber-200',
+          thumbDone: 'bg-emerald-400 text-emerald-950'
         }
   );
 
@@ -90,7 +90,6 @@
     }
   }
 
-  // Keyboard accessibility: focus the thumb, arrow keys / End to confirm.
   function key(e: KeyboardEvent) {
     if (disabled || confirmed) return;
     const step = maxX() / 10;
@@ -113,7 +112,7 @@
 
 <div
   bind:this={track}
-  class="relative h-14 w-full rounded-full overflow-hidden select-none
+  class="relative h-14 w-full rounded-full overflow-hidden select-none border
          {confirmed ? palette.trackDone : disabled ? palette.trackDisabled : palette.trackIdle}"
 >
   <div
@@ -122,7 +121,7 @@
     style="width: {thumbX + THUMB}px;"
   ></div>
   <div
-    class="absolute inset-0 flex items-center justify-center font-extrabold pointer-events-none
+    class="absolute inset-0 flex items-center justify-center text-sm font-semibold tracking-wide pointer-events-none
            {confirmed ? palette.textDone : palette.textIdle}"
   >
     {confirmed ? confirmedLabel : label}
@@ -141,8 +140,8 @@
     onpointercancel={end}
     onkeydown={key}
     {disabled}
-    class="absolute top-0 h-14 w-14 rounded-full shadow-lg border-2 border-white/40
-           flex items-center justify-center text-xl font-black
+    class="absolute top-0 h-14 w-14 rounded-full shadow-lg
+           flex items-center justify-center
            {confirmed
       ? palette.thumbDone + ' cursor-default'
       : disabled
@@ -152,6 +151,12 @@
       ? 'none'
       : 'transform 0.2s ease-out'};"
   >
-    {confirmed ? '✓' : '→'}
+    <svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      {#if confirmed}
+        <polyline points="5 12 10 17 19 8" />
+      {:else}
+        <polyline points="9 6 15 12 9 18" />
+      {/if}
+    </svg>
   </button>
 </div>

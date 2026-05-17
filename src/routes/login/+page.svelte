@@ -7,8 +7,8 @@
 </script>
 
 <section class="mx-auto max-w-md mt-16 space-y-6 text-center">
-  <h1 class="text-3xl font-extrabold">Sign in</h1>
-  <p class="opacity-90">Use Discord or GitHub to track your bingo progress.</p>
+  <h1 class="text-3xl font-extrabold tracking-tight">Sign in</h1>
+  <p class="text-slate-300">Use Discord or GitHub to track your bingo progress.</p>
 
   <div class="space-y-3">
     <button
@@ -19,7 +19,7 @@
     </button>
     <button
       onclick={() => loginWith('github')}
-      class="w-full rounded-lg bg-gray-900 hover:bg-black px-5 py-3 font-semibold transition"
+      class="w-full rounded-lg bg-slate-900 hover:bg-black border border-white/10 px-5 py-3 font-semibold transition"
     >
       Continue with GitHub
     </button>
