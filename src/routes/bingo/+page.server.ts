@@ -17,11 +17,7 @@ async function clearUserBoard(userId: string) {
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(302, '/login');
 
-  const tiles = await db
-    .select()
-    .from(bingoTile)
-    .where(eq(bingoTile.isActive, true))
-    .orderBy(bingoTile.position);
+  const tiles = await db.select().from(bingoTile).orderBy(bingoTile.position);
 
   const progress = await db
     .select()
@@ -63,6 +59,7 @@ export const actions: Actions = {
 
     const [tile] = await db.select().from(bingoTile).where(eq(bingoTile.id, tileId)).limit(1);
     if (!tile) return fail(404, { message: 'tile not found' });
+    if (!tile.isActive) return fail(403, { message: 'tile is locked' });
     if (tile.isFreeSpace) return { ok: true };
 
     const existing = await db

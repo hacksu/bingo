@@ -27,7 +27,7 @@
     <p class="text-sm text-slate-300">{data.target.email}</p>
   </div>
   <span class="ml-auto rounded-md bg-white/5 border border-white/10 px-3 py-1 text-sm text-slate-200">
-    {completedCount} / {data.tiles.filter((t) => t.isActive && !t.isFreeSpace).length} marked
+    {completedCount} / {data.tiles.filter((t) => !t.isFreeSpace).length} marked
   </span>
 </div>
 
@@ -104,12 +104,18 @@
     <div
       class="aspect-square w-full rounded-full flex items-center justify-center text-center
              text-[0.7rem] sm:text-xs font-bold leading-tight p-2
-             {tile.completed
-        ? tile.winning
-          ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
-          : 'bg-emerald-500 text-emerald-950'
-        : 'bg-slate-100 text-slate-800'}"
-      title={tile.isFreeSpace ? 'Free space' : tile.label}
+             {!tile.isActive
+        ? 'bg-slate-800/60 text-slate-400 border border-slate-600/40'
+        : tile.completed
+          ? tile.winning
+            ? 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
+            : 'bg-emerald-500 text-emerald-950'
+          : 'bg-slate-100 text-slate-800'}"
+      title={!tile.isActive
+        ? 'Locked — players cannot mark this'
+        : tile.isFreeSpace
+          ? 'Free space'
+          : tile.label}
     >
       {tile.label}
     </div>

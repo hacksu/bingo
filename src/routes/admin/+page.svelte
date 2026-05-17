@@ -5,7 +5,10 @@
 <header class="space-y-1 text-center">
   <h1 class="text-3xl font-extrabold tracking-tight">Users</h1>
   <p class="text-sm text-slate-300">
-    {data.users.length} players · {data.tileCount} active tiles
+    {data.users.length} players · {data.tileCount} tiles
+    {#if data.lockedCount > 0}
+      (<span class="text-slate-400">{data.lockedCount} locked</span>)
+    {/if}
     {#if data.pendingCount > 0}
       · <span class="text-amber-300 font-semibold">{data.pendingCount} pending</span>
     {/if}

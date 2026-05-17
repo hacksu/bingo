@@ -45,17 +45,20 @@
         <input type="hidden" name="tileId" value={tile.id} />
         <button
           type="submit"
-          disabled={tile.isFreeSpace}
+          disabled={tile.isFreeSpace || !tile.isActive}
+          title={!tile.isActive ? 'Locked — not yet available' : tile.label}
           class="w-full h-full rounded-full flex items-center justify-center text-center
                  text-[0.7rem] sm:text-xs font-bold leading-tight p-2 transition
-                 {tile.completed
-            ? tile.winning
-              ? isVerified
-                ? 'bg-emerald-400 text-emerald-950 ring-2 ring-emerald-200'
-                : 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
-              : 'bg-emerald-500 text-emerald-950'
-            : 'bg-slate-100 text-slate-800 hover:bg-white'}
-                 {tile.isFreeSpace ? 'cursor-default' : 'cursor-pointer'}"
+                 {!tile.isActive
+            ? 'bg-slate-800/60 text-slate-400 border border-slate-600/40 cursor-not-allowed'
+            : tile.completed
+              ? tile.winning
+                ? isVerified
+                  ? 'bg-emerald-400 text-emerald-950 ring-2 ring-emerald-200'
+                  : 'bg-amber-400 text-amber-950 ring-2 ring-amber-200'
+                : 'bg-emerald-500 text-emerald-950'
+              : 'bg-slate-100 text-slate-800 hover:bg-white cursor-pointer'}
+                 {tile.isFreeSpace ? 'cursor-default' : ''}"
         >
           {tile.label}
         </button>

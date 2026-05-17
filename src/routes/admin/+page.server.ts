@@ -1,11 +1,10 @@
-import { eq } from 'drizzle-orm';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  const tiles = await db.select().from(bingoTile).where(eq(bingoTile.isActive, true));
+  const tiles = await db.select().from(bingoTile);
   const allProgress = await db.select().from(bingoProgress);
   const users = await db.select().from(user);
 
@@ -58,6 +57,7 @@ export const load: PageServerLoad = async () => {
   return {
     users: rows,
     tileCount: tiles.length,
+    lockedCount: tiles.filter((t) => !t.isActive).length,
     pendingCount: rows.filter((r) => r.hasBingo && !r.verified).length,
     verifiedCount: rows.filter((r) => r.verified).length
   };
