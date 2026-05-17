@@ -4,8 +4,10 @@
   let { data, form } = $props();
 
   const count = $derived(data.tiles.length);
-  const isComplete = $derived(count === data.target);
-  const diff = $derived(count - data.target);
+  const isShort = $derived(count < data.target);
+  const isSurplus = $derived(count > data.target);
+  const short = $derived(data.target - count);
+  const surplus = $derived(count - data.target);
 
   const bulkError = $derived(form?.form === 'bulkAdd' && !form?.ok ? form?.message : null);
   const bulkSuccess = $derived(
@@ -22,21 +24,19 @@
 
 <div
   class="rounded-lg border px-4 py-3 text-sm text-center
-         {isComplete
-    ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
-    : 'border-amber-400/40 bg-amber-500/15 text-amber-100'}"
+         {isShort
+    ? 'border-amber-400/40 bg-amber-500/15 text-amber-100'
+    : 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'}"
 >
-  {count} / {data.target} tiles
-  ({data.gridSize}×{data.gridSize})
-  {#if !isComplete}
-    —
-    {#if diff > 0}
-      <span class="font-semibold">{diff} too many</span>; remove {diff} to complete the card.
-    {:else}
-      <span class="font-semibold">{-diff} more needed</span> to complete the card.
-    {/if}
+  <span class="font-semibold">{count}</span> tile{count === 1 ? '' : 's'} in pool —
+  cards are {data.gridSize}×{data.gridSize} ({data.target} per card).
+  {#if isShort}
+    <span class="font-semibold">{short} more needed</span> for a complete card.
+  {:else if isSurplus}
+    Each player gets a random {data.target} from the pool
+    ({surplus} extra{surplus === 1 ? '' : 's'} for variety).
   {:else}
-    — card is complete.
+    Pool exactly fills the card; every player sees the same {data.target} tiles in their own shuffled order.
   {/if}
 </div>
 
