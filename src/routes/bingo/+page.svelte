@@ -12,7 +12,7 @@
 
 <section class="mx-auto max-w-3xl space-y-6">
   <header class="text-center space-y-1">
-    <h1 class="text-4xl font-extrabold tracking-tight">Your Bingo Card</h1>
+    <h1 class="text-4xl font-extrabold tracking-tight">{(data.user?.name ?? 'User').toUpperCase()}'S BINGO CARD</h1>
     <p class="text-slate-300 text-sm">Tap a tile to mark it complete.</p>
   </header>
 
@@ -22,7 +22,7 @@
     >
       <div class="text-xl font-extrabold tracking-wider text-emerald-200">VERIFIED BINGO</div>
       <div class="text-sm text-emerald-100/80 mt-1">
-        Confirmed by an organizer on {new Date(data.verifiedAt!).toLocaleString()}.
+        Confirmed on {new Date(data.verifiedAt!).toLocaleString()} by {data.verifiedBy}.
       </div>
     </div>
   {:else if data.hasBingo}

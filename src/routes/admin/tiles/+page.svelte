@@ -8,6 +8,7 @@
   const isSurplus = $derived(count > data.target);
   const short = $derived(data.target - count);
   const surplus = $derived(count - data.target);
+  const freeSpaceCount = $derived(data.tiles.filter((t) => t.isFreeSpace).length);
 
   const bulkError = $derived(form?.form === 'bulkAdd' && !form?.ok ? form?.message : null);
   const bulkSuccess = $derived(
@@ -22,22 +23,40 @@
   <p class="text-sm text-slate-300">Edit labels, reorder by position, toggle active/free-space.</p>
 </header>
 
-<div
-  class="rounded-lg border px-4 py-3 text-sm text-center
-         {isShort
-    ? 'border-amber-400/40 bg-amber-500/15 text-amber-100'
-    : 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'}"
->
-  <span class="font-semibold">{count}</span> tile{count === 1 ? '' : 's'} in pool —
-  cards are {data.gridSize}×{data.gridSize} ({data.target} per card).
-  {#if isShort}
-    <span class="font-semibold">{short} more needed</span> for a complete card.
-  {:else if isSurplus}
-    Each player gets a random {data.target} from the pool
-    ({surplus} extra{surplus === 1 ? '' : 's'} for variety).
-  {:else}
-    Pool exactly fills the card; every player sees the same {data.target} tiles in their own shuffled order.
-  {/if}
+<div class="space-y-2">
+  <div
+    class="rounded-lg border px-4 py-3 text-sm text-center
+           {isShort
+      ? 'border-amber-400/40 bg-amber-500/15 text-amber-100'
+      : 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'}"
+  >
+    <span class="font-semibold">{count}</span> tile{count === 1 ? '' : 's'} in pool —
+    cards are {data.gridSize}×{data.gridSize} ({data.target} per card).
+    {#if isShort}
+      <span class="font-semibold">{short} more needed</span> for a complete card.
+    {:else if isSurplus}
+      Each player gets a random {data.target} from the pool
+      ({surplus} extra{surplus === 1 ? '' : 's'} for variety).
+    {:else}
+      Pool exactly fills the card; every player sees the same {data.target} tiles in their own shuffled order.
+    {/if}
+  </div>
+
+  <div
+    class="rounded-lg border px-4 py-2 text-sm text-center
+           {freeSpaceCount === 1
+      ? 'border-emerald-400/40 bg-emerald-500/10 text-emerald-100'
+      : 'border-amber-400/40 bg-amber-500/15 text-amber-100'}"
+  >
+    {#if freeSpaceCount === 1}
+      Free space configured — pinned to the center of every card.
+    {:else if freeSpaceCount === 0}
+      <span class="font-semibold">No free-space tile.</span> Cards will be filled with {data.target} regular tiles and no center freebie. Mark one tile as
+      <span class="font-mono">Free</span> below to enable it.
+    {:else}
+      <span class="font-semibold">{freeSpaceCount} free-space tiles configured.</span> Only one will be used per card (the others are dropped). Unmark the extras to fit them into the regular pool.
+    {/if}
+  </div>
 </div>
 
 <form

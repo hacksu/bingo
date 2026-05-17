@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
+import { sql } from 'drizzle-orm';
 import { detectBingo } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
@@ -38,7 +39,11 @@ export const load: PageServerLoad = async ({ locals }) => {
     .where(eq(bingoProgress.userId, locals.user.id));
 
   const [me] = await db
-    .select({ bingoVerifiedAt: user.bingoVerifiedAt, cardSeed: user.cardSeed })
+    .select({
+      bingoVerifiedAt: user.bingoVerifiedAt,
+      bingoVerifiedBy: sql<string | null>`(SELECT name FROM "user" WHERE id = ${user.bingoVerifiedBy})`,
+      cardSeed: user.cardSeed
+    })
     .from(user)
     .where(eq(user.id, locals.user.id))
     .limit(1);
@@ -63,7 +68,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       winning: winningPositions.has(idx)
     })),
     hasBingo,
-    verifiedAt: me?.bingoVerifiedAt ?? null
+    verifiedAt: me?.bingoVerifiedAt ?? null,
+    verifiedBy: me?.bingoVerifiedBy ?? null
   };
 };
 

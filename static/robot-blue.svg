@@ -1,0 +1,45 @@
+<svg viewBox="0 -20 160 240" xmlns="http://www.w3.org/2000/svg">
+  <!-- Head -->
+  <rect x="45" y="15" width="70" height="70" rx="8" fill="#1E88E5"/>
+  
+  <!-- Eyes -->
+  <circle cx="65" cy="40" r="8" fill="#000"/>
+  <circle cx="95" cy="40" r="8" fill="#000"/>
+  
+  <!-- Eye highlights -->
+  <circle cx="67" cy="38" r="3" fill="#fff"/>
+  <circle cx="97" cy="38" r="3" fill="#fff"/>
+  
+  <!-- Smile -->
+  <path d="M 70 55 Q 80 62 90 55" stroke="#000" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+  
+  <!-- Antenna left -->
+  <rect x="58" y="0" width="6" height="18" fill="#1E88E5"/>
+  <circle cx="61" cy="0" r="6" fill="#42A5F5"/>
+  
+  <!-- Antenna right -->
+  <rect x="96" y="0" width="6" height="18" fill="#1E88E5"/>
+  <circle cx="99" cy="0" r="6" fill="#42A5F5"/>
+  
+  <!-- Body -->
+  <rect x="35" y="85" width="90" height="75" rx="6" fill="#1E88E5"/>
+  
+  <!-- Body screen/panel -->
+  <rect x="50" y="100" width="60" height="45" rx="4" fill="#42A5F5"/>
+  
+  <!-- Left arm -->
+  <rect x="10" y="95" width="25" height="30" rx="8" fill="#1E88E5"/>
+  <circle cx="15" cy="115" r="7" fill="#42A5F5"/>
+  
+  <!-- Right arm -->
+  <rect x="125" y="95" width="25" height="30" rx="8" fill="#1E88E5"/>
+  <circle cx="145" cy="115" r="7" fill="#42A5F5"/>
+  
+  <!-- Left leg -->
+  <rect x="55" y="160" width="18" height="35" rx="4" fill="#1E88E5"/>
+  <rect x="52" y="192" width="24" height="8" fill="#1E88E5"/>
+  
+  <!-- Right leg -->
+  <rect x="87" y="160" width="18" height="35" rx="4" fill="#1E88E5"/>
+  <rect x="84" y="192" width="24" height="8" fill="#1E88E5"/>
+</svg>
