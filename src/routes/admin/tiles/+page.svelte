@@ -1,13 +1,79 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
 
-  let { data } = $props();
+  let { data, form } = $props();
+
+  const count = $derived(data.tiles.length);
+  const isComplete = $derived(count === data.target);
+  const diff = $derived(count - data.target);
+
+  const bulkError = $derived(form?.form === 'bulkAdd' && !form?.ok ? form?.message : null);
+  const bulkSuccess = $derived(
+    form?.form === 'bulkAdd' && form?.ok
+      ? `Added ${(form as { added?: number }).added ?? 0} tile${(form as { added?: number }).added === 1 ? '' : 's'}.`
+      : null
+  );
 </script>
 
 <header class="space-y-1 text-center">
   <h1 class="text-3xl font-extrabold tracking-tight">Tiles</h1>
   <p class="text-sm text-slate-300">Edit labels, reorder by position, toggle active/free-space.</p>
 </header>
+
+<div
+  class="rounded-lg border px-4 py-3 text-sm text-center
+         {isComplete
+    ? 'border-emerald-400/40 bg-emerald-500/15 text-emerald-100'
+    : 'border-amber-400/40 bg-amber-500/15 text-amber-100'}"
+>
+  {count} / {data.target} tiles
+  ({data.gridSize}×{data.gridSize})
+  {#if !isComplete}
+    —
+    {#if diff > 0}
+      <span class="font-semibold">{diff} too many</span>; remove {diff} to complete the card.
+    {:else}
+      <span class="font-semibold">{-diff} more needed</span> to complete the card.
+    {/if}
+  {:else}
+    — card is complete.
+  {/if}
+</div>
+
+<form
+  method="POST"
+  action="?/bulkAdd"
+  use:enhance
+  enctype="multipart/form-data"
+  class="space-y-2 rounded-lg border border-white/10 bg-white/5 p-3"
+>
+  <div class="flex flex-wrap gap-2 items-center">
+    <input
+      type="file"
+      name="file"
+      accept=".csv,text/csv,text/plain"
+      required
+      class="flex-1 min-w-64 text-sm text-slate-200 file:mr-3 file:rounded-md
+             file:bg-emerald-500/20 file:border file:border-emerald-400/40 file:text-emerald-100
+             file:px-3 file:py-1.5 file:font-semibold hover:file:bg-emerald-500/30"
+    />
+    <button
+      type="submit"
+      class="rounded-md bg-emerald-500 text-emerald-950 font-semibold px-4 py-2 hover:bg-emerald-400 transition"
+    >
+      Bulk add
+    </button>
+  </div>
+  <p class="text-xs text-slate-400">
+    One label per line. Will be appended to existing tiles. Total must equal exactly {data.target}
+    ({data.gridSize}×{data.gridSize}) after upload — partial cards are rejected.
+  </p>
+  {#if bulkError}
+    <p class="text-sm text-rose-300 font-semibold">{bulkError}</p>
+  {:else if bulkSuccess}
+    <p class="text-sm text-emerald-300 font-semibold">{bulkSuccess}</p>
+  {/if}
+</form>
 
 <form
   method="POST"

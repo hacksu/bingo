@@ -1,4 +1,11 @@
+export const MAX_GRID_SIZE = 6;
 export const GRID_SIZE = 5;
+
+if (GRID_SIZE > MAX_GRID_SIZE) {
+  throw new Error(
+    `GRID_SIZE (${GRID_SIZE}) exceeds MAX_GRID_SIZE (${MAX_GRID_SIZE}). Cards are capped at 6x6.`
+  );
+}
 
 // All 12 winning lines on a 5x5 board, expressed as tile positions (0..24).
 export const WIN_LINES: number[][] = (() => {
