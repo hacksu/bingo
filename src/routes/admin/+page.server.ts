@@ -1,6 +1,7 @@
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
+import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
@@ -8,28 +9,27 @@ export const load: PageServerLoad = async () => {
   const allProgress = await db.select().from(bingoProgress);
   const users = await db.select().from(user);
 
-  const tileById = new Map(tiles.map((t) => [t.id, t]));
-  const freeSpacePositions = new Set(tiles.filter((t) => t.isFreeSpace).map((t) => t.position));
-
-  const progressByUser = new Map<string, { positions: Set<number>; count: number }>();
+  const completedByUser = new Map<string, Set<string>>();
   for (const p of allProgress) {
-    const tile = tileById.get(p.tileId);
-    if (!tile) continue;
-    let entry = progressByUser.get(p.userId);
-    if (!entry) {
-      entry = { positions: new Set(freeSpacePositions), count: 0 };
-      progressByUser.set(p.userId, entry);
+    let s = completedByUser.get(p.userId);
+    if (!s) {
+      s = new Set<string>();
+      completedByUser.set(p.userId, s);
     }
-    entry.positions.add(tile.position);
-    entry.count++;
+    s.add(p.tileId);
   }
 
   const rows = users.map((u) => {
-    const entry = progressByUser.get(u.id) ?? {
-      positions: new Set(freeSpacePositions),
-      count: 0
-    };
-    const { hasBingo } = detectBingo(entry.positions);
+    const completedIds = completedByUser.get(u.id) ?? new Set<string>();
+    // Per-user shuffle: bingo detection has to use the indices THIS player sees,
+    // not the canonical positions, otherwise the badge could disagree with the
+    // player's own card.
+    const ordered = shuffleTilesForUser(tiles, u.cardSeed);
+    const positions = new Set<number>();
+    ordered.forEach((t, idx) => {
+      if (completedIds.has(t.id) || t.isFreeSpace) positions.add(idx);
+    });
+    const { hasBingo } = detectBingo(positions);
     const verified = !!u.bingoVerifiedAt;
     return {
       id: u.id,
@@ -37,12 +37,10 @@ export const load: PageServerLoad = async () => {
       email: u.email,
       image: u.image,
       role: u.role,
-      completed: entry.count,
+      completed: completedIds.size,
       hasBingo,
       verified,
       verifiedAt: u.bingoVerifiedAt,
-      // Highest priority: unverified bingos (needs admin action).
-      // Then verified bingos. Then everyone else.
       sortRank: hasBingo && !verified ? 2 : hasBingo && verified ? 1 : 0
     };
   });

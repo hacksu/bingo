@@ -1,29 +1,36 @@
 import { error, fail } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
+import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
+import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
 
-async function loadBingoState(targetId: string) {
+async function loadBingoState(targetId: string, seed: string | null) {
   const tiles = await db.select().from(bingoTile).orderBy(bingoTile.position);
   const progress = await db.select().from(bingoProgress).where(eq(bingoProgress.userId, targetId));
   const completed = new Set(progress.map((p) => p.tileId));
 
+  const ordered = shuffleTilesForUser(tiles, seed);
+
   const completedPositions = new Set<number>();
-  for (const t of tiles) {
-    if (!t.isActive) continue;
-    if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(t.position);
-  }
+  ordered.forEach((t, idx) => {
+    if (!t.isActive) return;
+    if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(idx);
+  });
   const { hasBingo, winningPositions } = detectBingo(completedPositions);
-  return { tiles, completed, hasBingo, winningPositions };
+  return { tiles: ordered, completed, hasBingo, winningPositions };
 }
 
 export const load: PageServerLoad = async ({ params }) => {
   const [target] = await db.select().from(user).where(eq(user.id, params.id)).limit(1);
   if (!target) throw error(404, 'User not found');
 
-  const { tiles, completed, hasBingo, winningPositions } = await loadBingoState(target.id);
+  const { tiles, completed, hasBingo, winningPositions } = await loadBingoState(
+    target.id,
+    target.cardSeed
+  );
 
   return {
     target: {
@@ -34,11 +41,11 @@ export const load: PageServerLoad = async ({ params }) => {
       bingoVerifiedAt: target.bingoVerifiedAt,
       bingoVerifiedBy: target.bingoVerifiedBy
     },
-    tiles: tiles.map((t) => ({
+    tiles: tiles.map((t, idx) => ({
       ...t,
       completed: completed.has(t.id) || t.isFreeSpace,
       selfMarked: completed.has(t.id),
-      winning: winningPositions.has(t.position)
+      winning: winningPositions.has(idx)
     })),
     hasBingo
   };
@@ -51,7 +58,7 @@ export const actions: Actions = {
     const [target] = await db.select().from(user).where(eq(user.id, params.id)).limit(1);
     if (!target) return fail(404, { message: 'User not found' });
 
-    const { hasBingo } = await loadBingoState(target.id);
+    const { hasBingo } = await loadBingoState(target.id, target.cardSeed);
     if (!hasBingo) {
       return fail(400, { message: 'Player no longer has a bingo — refresh and re-check.' });
     }
@@ -79,7 +86,12 @@ export const actions: Actions = {
     await db.delete(bingoProgress).where(eq(bingoProgress.userId, params.id));
     await db
       .update(user)
-      .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
+      .set({
+        bingoVerifiedAt: null,
+        bingoVerifiedBy: null,
+        cardSeed: randomUUID(),
+        updatedAt: new Date()
+      })
       .where(eq(user.id, params.id));
     return { ok: true, reset: true };
   }

@@ -4,14 +4,27 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
+import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
 
-async function clearUserBoard(userId: string) {
+async function resetUserBoard(userId: string, regenerateSeed: boolean): Promise<void> {
   await db.delete(bingoProgress).where(eq(bingoProgress.userId, userId));
   await db
     .update(user)
-    .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
+    .set({
+      bingoVerifiedAt: null,
+      bingoVerifiedBy: null,
+      ...(regenerateSeed ? { cardSeed: randomUUID() } : {}),
+      updatedAt: new Date()
+    })
     .where(eq(user.id, userId));
+}
+
+async function ensureCardSeed(userId: string, existing: string | null): Promise<string> {
+  if (existing) return existing;
+  const seed = randomUUID();
+  await db.update(user).set({ cardSeed: seed, updatedAt: new Date() }).where(eq(user.id, userId));
+  return seed;
 }
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -25,24 +38,29 @@ export const load: PageServerLoad = async ({ locals }) => {
     .where(eq(bingoProgress.userId, locals.user.id));
 
   const [me] = await db
-    .select({ bingoVerifiedAt: user.bingoVerifiedAt })
+    .select({ bingoVerifiedAt: user.bingoVerifiedAt, cardSeed: user.cardSeed })
     .from(user)
     .where(eq(user.id, locals.user.id))
     .limit(1);
 
+  const seed = await ensureCardSeed(locals.user.id, me?.cardSeed ?? null);
+  const ordered = shuffleTilesForUser(tiles, seed);
+
   const completed = new Set(progress.map((p) => p.tileId));
 
+  // After shuffling, the "displayed position" of a tile is its index in `ordered`,
+  // not its global `tile.position`. Bingo detection runs on those indices.
   const completedPositions = new Set<number>();
-  for (const t of tiles) {
-    if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(t.position);
-  }
+  ordered.forEach((t, idx) => {
+    if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(idx);
+  });
   const { hasBingo, winningPositions } = detectBingo(completedPositions);
 
   return {
-    tiles: tiles.map((t) => ({
+    tiles: ordered.map((t, idx) => ({
       ...t,
       completed: completed.has(t.id) || t.isFreeSpace,
-      winning: winningPositions.has(t.position)
+      winning: winningPositions.has(idx)
     })),
     hasBingo,
     verifiedAt: me?.bingoVerifiedAt ?? null
@@ -86,7 +104,7 @@ export const actions: Actions = {
 
   reset: async ({ locals }) => {
     if (!locals.user) throw error(401, 'Unauthorized');
-    await clearUserBoard(locals.user.id);
+    await resetUserBoard(locals.user.id, true);
     return { ok: true, reset: true };
   }
 };
