@@ -9,6 +9,11 @@
   const isVerified = $derived(!!data.target.bingoVerifiedAt);
 
   let verifyForm: HTMLFormElement | undefined = $state();
+  let resetForm: HTMLFormElement | undefined = $state();
+
+  const hasAnyProgress = $derived(
+    data.tiles.some((t) => t.selfMarked) || isVerified
+  );
 </script>
 
 <header class="flex items-center gap-4">
@@ -100,3 +105,24 @@
     </div>
   {/each}
 </div>
+
+{#if hasAnyProgress}
+  <div class="rounded-xl border-2 border-red-500/50 bg-red-500/10 px-5 py-4 space-y-3">
+    <div>
+      <div class="font-extrabold text-red-200">Reset card</div>
+      <p class="text-sm opacity-80">
+        Clears every tile {data.target.name} has marked{isVerified
+          ? ' and removes their verification'
+          : ''}. Cannot be undone.
+      </p>
+    </div>
+    <form method="POST" action="?/reset" use:enhance bind:this={resetForm}>
+      <SlideToConfirm
+        variant="danger"
+        label="Slide to reset {data.target.name}'s card"
+        confirmedLabel="✓ Resetting…"
+        onconfirm={() => resetForm?.requestSubmit()}
+      />
+    </form>
+  </div>
+{/if}

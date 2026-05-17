@@ -6,6 +6,14 @@ import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
 import type { Actions, PageServerLoad } from './$types';
 
+async function clearUserBoard(userId: string) {
+  await db.delete(bingoProgress).where(eq(bingoProgress.userId, userId));
+  await db
+    .update(user)
+    .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
+    .where(eq(user.id, userId));
+}
+
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(302, '/login');
 
@@ -77,5 +85,11 @@ export const actions: Actions = {
     });
 
     return { ok: true, completed: true };
+  },
+
+  reset: async ({ locals }) => {
+    if (!locals.user) throw error(401, 'Unauthorized');
+    await clearUserBoard(locals.user.id);
+    return { ok: true, reset: true };
   }
 };

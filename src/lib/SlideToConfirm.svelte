@@ -4,14 +4,44 @@
     confirmedLabel?: string;
     onconfirm: () => void;
     disabled?: boolean;
+    variant?: 'confirm' | 'danger';
   };
 
   let {
     label = 'Slide to confirm',
     confirmedLabel = '✓ Confirmed',
     onconfirm,
-    disabled = false
+    disabled = false,
+    variant = 'confirm'
   }: Props = $props();
+
+  const palette = $derived(
+    variant === 'danger'
+      ? {
+          trackIdle: 'bg-red-200',
+          trackDisabled: 'bg-red-200/60',
+          trackDone: 'bg-red-300',
+          fillIdle: 'bg-red-300',
+          fillDone: 'bg-red-400',
+          textIdle: 'text-red-950/80',
+          textDone: 'text-red-950',
+          thumbIdle: 'bg-red-600 text-white',
+          thumbDisabled: 'bg-red-300 text-red-900',
+          thumbDone: 'bg-red-700 text-white'
+        }
+      : {
+          trackIdle: 'bg-yellow-200',
+          trackDisabled: 'bg-yellow-200/60',
+          trackDone: 'bg-emerald-300',
+          fillIdle: 'bg-yellow-300',
+          fillDone: 'bg-emerald-400',
+          textIdle: 'text-yellow-950/80',
+          textDone: 'text-emerald-950',
+          thumbIdle: 'bg-emerald-500 text-white',
+          thumbDisabled: 'bg-yellow-300 text-yellow-900',
+          thumbDone: 'bg-emerald-500 text-white'
+        }
+  );
 
   const THUMB = 56;
   const THRESHOLD = 0.97;
@@ -84,16 +114,16 @@
 <div
   bind:this={track}
   class="relative h-14 w-full rounded-full overflow-hidden select-none
-         {confirmed ? 'bg-emerald-300' : disabled ? 'bg-yellow-200/60' : 'bg-yellow-200'}"
+         {confirmed ? palette.trackDone : disabled ? palette.trackDisabled : palette.trackIdle}"
 >
   <div
     class="absolute inset-y-0 left-0 rounded-full transition-colors
-           {confirmed ? 'bg-emerald-400' : 'bg-yellow-300'}"
+           {confirmed ? palette.fillDone : palette.fillIdle}"
     style="width: {thumbX + THUMB}px;"
   ></div>
   <div
     class="absolute inset-0 flex items-center justify-center font-extrabold pointer-events-none
-           {confirmed ? 'text-emerald-950' : 'text-yellow-950/80'}"
+           {confirmed ? palette.textDone : palette.textIdle}"
   >
     {confirmed ? confirmedLabel : label}
   </div>
@@ -114,10 +144,10 @@
     class="absolute top-0 h-14 w-14 rounded-full shadow-lg border-2 border-white/40
            flex items-center justify-center text-xl font-black
            {confirmed
-      ? 'bg-emerald-500 text-white cursor-default'
+      ? palette.thumbDone + ' cursor-default'
       : disabled
-        ? 'bg-yellow-300 text-yellow-900 cursor-not-allowed'
-        : 'bg-emerald-500 text-white cursor-grab active:cursor-grabbing'}"
+        ? palette.thumbDisabled + ' cursor-not-allowed'
+        : palette.thumbIdle + ' cursor-grab active:cursor-grabbing'}"
     style="transform: translateX({thumbX}px); transition: {dragging
       ? 'none'
       : 'transform 0.2s ease-out'};"

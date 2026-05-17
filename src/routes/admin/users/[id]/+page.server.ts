@@ -73,5 +73,14 @@ export const actions: Actions = {
       .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
       .where(eq(user.id, params.id));
     return { ok: true, verified: false };
+  },
+
+  reset: async ({ params }) => {
+    await db.delete(bingoProgress).where(eq(bingoProgress.userId, params.id));
+    await db
+      .update(user)
+      .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
+      .where(eq(user.id, params.id));
+    return { ok: true, reset: true };
   }
 };

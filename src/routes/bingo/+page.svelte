@@ -1,10 +1,14 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { GRID_SIZE } from '$lib/bingo';
+  import SlideToConfirm from '$lib/SlideToConfirm.svelte';
 
   let { data } = $props();
 
   const isVerified = $derived(!!data.verifiedAt);
+  const hasAnyProgress = $derived(data.tiles.some((t) => t.completed && !t.isFreeSpace));
+
+  let resetForm: HTMLFormElement | undefined = $state();
 </script>
 
 <section class="mx-auto max-w-3xl space-y-6">
@@ -57,4 +61,24 @@
       </form>
     {/each}
   </div>
+
+  {#if hasAnyProgress}
+    <div class="rounded-xl border-2 border-red-500/50 bg-red-500/10 px-5 py-4 space-y-3">
+      <div>
+        <div class="font-extrabold text-red-200">Reset card</div>
+        <p class="text-sm opacity-80">
+          Clears every tile you've marked{isVerified ? ' and removes your verification' : ''}.
+          Cannot be undone.
+        </p>
+      </div>
+      <form method="POST" action="?/reset" use:enhance bind:this={resetForm}>
+        <SlideToConfirm
+          variant="danger"
+          label="Slide to reset your card"
+          confirmedLabel="✓ Resetting…"
+          onconfirm={() => resetForm?.requestSubmit()}
+        />
+      </form>
+    </div>
+  {/if}
 </section>
