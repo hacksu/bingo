@@ -1,15 +1,14 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { GRID_SIZE } from '$lib/bingo';
+  import SlideToConfirm from '$lib/SlideToConfirm.svelte';
 
   let { data, form } = $props();
 
   const completedCount = $derived(data.tiles.filter((t) => t.selfMarked).length);
   const isVerified = $derived(!!data.target.bingoVerifiedAt);
-  const expectedName = $derived(data.target.name.trim());
 
-  let typed = $state('');
-  const typedMatches = $derived(typed.trim().toLowerCase() === expectedName.toLowerCase());
+  let verifyForm: HTMLFormElement | undefined = $state();
 </script>
 
 <header class="flex items-center gap-4">
@@ -63,28 +62,14 @@
   <div class="rounded-xl bg-yellow-400 text-yellow-950 px-5 py-5 ring-4 ring-yellow-300 space-y-3">
     <div class="text-xl font-extrabold">🎉 BINGO — winning line highlighted</div>
     <p class="text-sm font-semibold opacity-90">
-      Look over the card. If the player legitimately earned these tiles, type their name below to
-      confirm.
+      Look the card over. If the player legitimately earned these tiles, slide to verify.
     </p>
-    <form method="POST" action="?/verify" use:enhance class="flex flex-wrap gap-2 items-center">
-      <input
-        type="text"
-        name="confirm"
-        bind:value={typed}
-        placeholder="Type “{expectedName}” to confirm"
-        autocomplete="off"
-        class="flex-1 min-w-56 rounded-md bg-white text-yellow-950 placeholder:text-yellow-900/60 px-3 py-2 font-semibold"
+    <form method="POST" action="?/verify" use:enhance bind:this={verifyForm}>
+      <SlideToConfirm
+        label="Slide to verify {data.target.name}'s bingo"
+        confirmedLabel="✓ Verifying…"
+        onconfirm={() => verifyForm?.requestSubmit()}
       />
-      <button
-        type="submit"
-        disabled={!typedMatches}
-        class="rounded-md px-4 py-2 font-extrabold transition
-               {typedMatches
-          ? 'bg-emerald-500 text-emerald-950 hover:bg-emerald-400 cursor-pointer'
-          : 'bg-yellow-300 text-yellow-900 opacity-60 cursor-not-allowed'}"
-      >
-        Verify Bingo
-      </button>
     </form>
     {#if form?.message}
       <p class="text-sm font-semibold text-red-900">{form.message}</p>

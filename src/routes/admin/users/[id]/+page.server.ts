@@ -45,19 +45,11 @@ export const load: PageServerLoad = async ({ params }) => {
 };
 
 export const actions: Actions = {
-  verify: async ({ request, params, locals }) => {
+  verify: async ({ params, locals }) => {
     if (!locals.user) throw error(401, 'Unauthorized');
 
     const [target] = await db.select().from(user).where(eq(user.id, params.id)).limit(1);
     if (!target) return fail(404, { message: 'User not found' });
-
-    const form = await request.formData();
-    const typed = String(form.get('confirm') ?? '')
-      .trim()
-      .toLowerCase();
-    if (typed !== target.name.trim().toLowerCase()) {
-      return fail(400, { message: 'Name confirmation did not match.' });
-    }
 
     const { hasBingo } = await loadBingoState(target.id);
     if (!hasBingo) {
