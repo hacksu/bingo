@@ -27,6 +27,9 @@
   <!-- Body screen/panel -->
   <rect x="50" y="100" width="60" height="45" rx="4" fill="#42A5F5"/>
   
+  <!-- H letter -->
+  <text x="80" y="135" font-size="32" font-weight="bold" fill="#5FBD3F" text-anchor="middle" dominant-baseline="middle">H</text>
+  
   <!-- Left arm -->
   <rect x="10" y="95" width="25" height="30" rx="8" fill="#1E88E5"/>
   <circle cx="15" cy="115" r="7" fill="#42A5F5"/>

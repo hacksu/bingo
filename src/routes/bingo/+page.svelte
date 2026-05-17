@@ -1,6 +1,8 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { GRID_SIZE } from '$lib/bingo';
+  import RobotGreen from '$lib/RobotGreen.svelte';
+  import RobotBlue from '$lib/RobotBlue.svelte';
 
   let { data } = $props();
 
@@ -10,11 +12,16 @@
   let resetArmed = $state(false);
 </script>
 
-<section class="mx-auto max-w-3xl space-y-6">
-  <header class="text-center space-y-1">
-    <h1 class="text-4xl font-extrabold tracking-tight">{(data.user?.name ?? 'User').toUpperCase()}'S BINGO CARD</h1>
-    <p class="text-slate-300 text-sm">Tap a tile to mark it complete.</p>
-  </header>
+<div class="flex items-center justify-center gap-8">
+  <div class="hidden lg:block">
+    <RobotGreen size="200px" animated />
+  </div>
+
+  <section class="mx-auto max-w-3xl space-y-6">
+    <header class="text-center space-y-1">
+      <h1 class="text-4xl font-extrabold tracking-tight">{(data.user?.name ?? 'User').toUpperCase()}'S BINGO CARD</h1>
+      <p class="text-slate-300 text-sm">Tap a tile to mark it complete.</p>
+    </header>
 
   {#if isVerified && data.hasBingo}
     <div
@@ -117,4 +124,9 @@
       {/if}
     </div>
   {/if}
-</section>
+  </section>
+
+  <div class="hidden lg:block">
+    <RobotBlue size="200px" animated />
+  </div>
+</div>
