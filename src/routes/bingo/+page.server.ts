@@ -3,6 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile } from '$lib/server/db/schema';
+import { detectBingo } from '$lib/bingo';
 import type { Actions, PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async ({ locals }) => {
@@ -21,8 +22,19 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const completed = new Set(progress.map((p) => p.tileId));
 
+  const completedPositions = new Set<number>();
+  for (const t of tiles) {
+    if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(t.position);
+  }
+  const { hasBingo, winningPositions } = detectBingo(completedPositions);
+
   return {
-    tiles: tiles.map((t) => ({ ...t, completed: completed.has(t.id) || t.isFreeSpace }))
+    tiles: tiles.map((t) => ({
+      ...t,
+      completed: completed.has(t.id) || t.isFreeSpace,
+      winning: winningPositions.has(t.position)
+    })),
+    hasBingo
   };
 };
 
