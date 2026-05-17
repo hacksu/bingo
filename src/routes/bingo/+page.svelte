@@ -1,14 +1,13 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
   import { GRID_SIZE } from '$lib/bingo';
-  import SlideToConfirm from '$lib/SlideToConfirm.svelte';
 
   let { data } = $props();
 
   const isVerified = $derived(!!data.verifiedAt);
   const hasAnyProgress = $derived(data.tiles.some((t) => t.completed && !t.isFreeSpace));
 
-  let resetForm: HTMLFormElement | undefined = $state();
+  let resetArmed = $state(false);
 </script>
 
 <section class="mx-auto max-w-3xl space-y-6">
@@ -71,14 +70,44 @@
           Cannot be undone.
         </p>
       </div>
-      <form method="POST" action="?/reset" use:enhance bind:this={resetForm}>
-        <SlideToConfirm
-          variant="danger"
-          label="Slide to reset your card"
-          confirmedLabel="✓ Resetting…"
-          onconfirm={() => resetForm?.requestSubmit()}
-        />
-      </form>
+
+      {#if !resetArmed}
+        <button
+          type="button"
+          onclick={() => (resetArmed = true)}
+          class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+        >
+          Reset card
+        </button>
+      {:else}
+        <div class="flex flex-wrap items-center gap-2">
+          <span class="text-sm font-bold text-red-200">Really reset your card?</span>
+          <form
+            method="POST"
+            action="?/reset"
+            use:enhance={() => {
+              return async ({ update }) => {
+                resetArmed = false;
+                await update();
+              };
+            }}
+          >
+            <button
+              type="submit"
+              class="rounded-md bg-red-600 text-white font-extrabold px-5 py-2.5 hover:bg-red-500 transition"
+            >
+              Yes, reset
+            </button>
+          </form>
+          <button
+            type="button"
+            onclick={() => (resetArmed = false)}
+            class="rounded-md bg-white/10 text-white font-semibold px-4 py-2.5 hover:bg-white/20 transition"
+          >
+            Cancel
+          </button>
+        </div>
+      {/if}
     </div>
   {/if}
 </section>
