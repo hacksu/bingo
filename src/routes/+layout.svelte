@@ -16,9 +16,9 @@
     <img src="/hacksu_footer.svg" alt="HACKSU logo" class="h-12 w-auto inline-block mr-2 -mt-1" />
     BINGO
   </a>
-  {#if data.user.role === 'admin'}
-        <a href="/admin" class="hover:text-amber-200 text-amber-300 transition">Admin</a>
-      {/if}
+  {#if data.user?.role === 'admin'}
+    <a href="/admin" class="hover:text-amber-200 text-amber-300 transition">Admin</a>
+  {/if}
   <nav class="flex items-center gap-4 text-sm">
     {#if data.user}
       <a href="/bingo" class="hover:text-white text-slate-300 transition">My Card</a>

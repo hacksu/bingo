@@ -16,6 +16,27 @@ services:
       timeout: 5s
       retries: 10
 
+  db-init:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://${POSTGRES_USER:-bingo}:${POSTGRES_PASSWORD:-bingo}@db:5432/${POSTGRES_DB:-bingo}
+    restart: "no"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        COUNT=$$(bun -e "import postgres from 'postgres'; const sql=postgres(process.env.DATABASE_URL); const r=await sql\`select count(*)::int as c from information_schema.tables where table_schema='public'\`; process.stdout.write(String(r[0].c)); await sql.end()")
+        if [ "$$COUNT" = "0" ]; then
+          echo "[db-init] empty DB — pushing schema"
+          bunx drizzle-kit push --force
+        else
+          echo "[db-init] $$COUNT tables present — skipping"
+        fi
+
   app:
     build:
       context: .
@@ -24,6 +45,8 @@ services:
     depends_on:
       db:
         condition: service_healthy
+      db-init:
+        condition: service_completed_successfully
     environment:
       NODE_ENV: production
       PORT: 3000
