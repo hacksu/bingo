@@ -1,3 +1,5 @@
+name: bingo
+
 services:
   db:
     image: postgres:16-alpine
@@ -8,8 +10,8 @@ services:
       POSTGRES_DB: ${POSTGRES_DB:-bingo}
     volumes:
       - bingo_db_data:/var/lib/postgresql/data
-    ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+    networks:
+      - app_internal
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-bingo} -d ${POSTGRES_DB:-bingo}"]
       interval: 5s
@@ -25,6 +27,8 @@ services:
         condition: service_healthy
     environment:
       DATABASE_URL: postgres://${POSTGRES_USER:-bingo}:${POSTGRES_PASSWORD:-bingo}@db:5432/${POSTGRES_DB:-bingo}
+    networks:
+      - app_internal
     restart: "no"
     entrypoint: ["sh", "-c"]
     command:
@@ -61,8 +65,11 @@ services:
       DISCORD_CLIENT_SECRET: ${DISCORD_CLIENT_SECRET}
       GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID}
       GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET}
-    ports:
-      - "${APP_PORT:-3000}:3000"
+    networks:
+      - app_internal
+
+networks:
+  app_internal:
 
 volumes:
   bingo_db_data:
