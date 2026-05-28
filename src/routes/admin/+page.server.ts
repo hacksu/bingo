@@ -5,9 +5,17 @@ import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { PageServerLoad } from './$types';
 
 export const load: PageServerLoad = async () => {
-  const tiles = await db.select().from(bingoTile);
-  const allProgress = await db.select().from(bingoProgress);
-  const users = await db.select().from(user);
+  const tiles = await db
+    .select({ id: bingoTile.id, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace, isActive: bingoTile.isActive })
+    .from(bingoTile);
+
+  const allProgress = await db
+    .select({ userId: bingoProgress.userId, tileId: bingoProgress.tileId })
+    .from(bingoProgress);
+
+  const users = await db
+    .select({ id: user.id, name: user.name, image: user.image, role: user.role, cardSeed: user.cardSeed, bingoVerifiedAt: user.bingoVerifiedAt })
+    .from(user);
 
   const completedByUser = new Map<string, Set<string>>();
   for (const p of allProgress) {
@@ -21,9 +29,6 @@ export const load: PageServerLoad = async () => {
 
   const rows = users.map((u) => {
     const completedIds = completedByUser.get(u.id) ?? new Set<string>();
-    // Per-user shuffle: bingo detection has to use the indices THIS player sees,
-    // not the canonical positions, otherwise the badge could disagree with the
-    // player's own card.
     const ordered = shuffleTilesForUser(tiles, u.cardSeed);
     const positions = new Set<number>();
     ordered.forEach((t, idx) => {
@@ -34,7 +39,6 @@ export const load: PageServerLoad = async () => {
     return {
       id: u.id,
       name: u.name,
-      email: u.email,
       image: u.image,
       role: u.role,
       completed: completedIds.size,

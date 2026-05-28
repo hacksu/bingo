@@ -1,15 +1,19 @@
-import { fail } from '@sveltejs/kit';
+import { error, fail } from '@sveltejs/kit';
 import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoTile } from '$lib/server/db/schema';
 import { GRID_SIZE } from '$lib/bingo';
+import { isAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 const TARGET_TILES = GRID_SIZE * GRID_SIZE;
 
 export const load: PageServerLoad = async () => {
-  const tiles = await db.select().from(bingoTile).orderBy(bingoTile.position);
+  const tiles = await db
+    .select({ id: bingoTile.id, label: bingoTile.label, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace, isActive: bingoTile.isActive })
+    .from(bingoTile)
+    .orderBy(bingoTile.position);
   return {
     tiles,
     target: TARGET_TILES,
@@ -22,11 +26,6 @@ function parseTileId(form: FormData) {
   return typeof id === 'string' && id ? id : null;
 }
 
-/**
- * Loose CSV-ish parsing: one tile label per non-empty line. If a line has
- * commas, the first field is taken as the label (so a multi-column export
- * still works). Surrounding double-quotes are stripped.
- */
 function parseLabels(text: string): string[] {
   return text
     .split(/\r?\n/)
@@ -35,7 +34,8 @@ function parseLabels(text: string): string[] {
 }
 
 export const actions: Actions = {
-  update: async ({ request }) => {
+  update: async ({ request, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     const form = await request.formData();
     const id = parseTileId(form);
     if (!id) return fail(400, { message: 'id required' });
@@ -58,7 +58,8 @@ export const actions: Actions = {
     return { ok: true };
   },
 
-  create: async ({ request }) => {
+  create: async ({ request, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     const form = await request.formData();
     const label = String(form.get('label') ?? '').trim();
     if (!label) return fail(400, { message: 'label required' });
@@ -77,7 +78,8 @@ export const actions: Actions = {
     return { ok: true };
   },
 
-  delete: async ({ request }) => {
+  delete: async ({ request, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     const form = await request.formData();
     const id = parseTileId(form);
     if (!id) return fail(400, { message: 'id required' });
@@ -85,7 +87,8 @@ export const actions: Actions = {
     return { ok: true };
   },
 
-  bulkAdd: async ({ request }) => {
+  bulkAdd: async ({ request, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     const form = await request.formData();
     const file = form.get('file');
     if (!(file instanceof File) || file.size === 0) {
@@ -98,11 +101,11 @@ export const actions: Actions = {
       return fail(400, { form: 'bulkAdd', message: 'No labels found in file.' });
     }
 
-    const existing = await db.select().from(bingoTile);
+    const existing = await db
+      .select({ id: bingoTile.id, position: bingoTile.position })
+      .from(bingoTile);
     const total = existing.length + labels.length;
 
-    // The pool must be at least N² so every player can be dealt a complete card.
-    // Pools larger than that are fine — each player gets a random N² subset.
     if (total < TARGET_TILES) {
       const short = TARGET_TILES - total;
       return fail(400, {

@@ -5,11 +5,18 @@ import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
+import { isAdmin } from '$lib/server/admin';
 import type { Actions, PageServerLoad } from './$types';
 
 async function loadBingoState(targetId: string, seed: string | null) {
-  const tiles = await db.select().from(bingoTile).orderBy(bingoTile.position);
-  const progress = await db.select().from(bingoProgress).where(eq(bingoProgress.userId, targetId));
+  const tiles = await db
+    .select({ id: bingoTile.id, label: bingoTile.label, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace, isActive: bingoTile.isActive })
+    .from(bingoTile)
+    .orderBy(bingoTile.position);
+  const progress = await db
+    .select({ tileId: bingoProgress.tileId })
+    .from(bingoProgress)
+    .where(eq(bingoProgress.userId, targetId));
   const completed = new Set(progress.map((p) => p.tileId));
 
   const ordered = shuffleTilesForUser(tiles, seed);
@@ -24,7 +31,11 @@ async function loadBingoState(targetId: string, seed: string | null) {
 }
 
 export const load: PageServerLoad = async ({ params }) => {
-  const [target] = await db.select().from(user).where(eq(user.id, params.id)).limit(1);
+  const [target] = await db
+    .select({ id: user.id, name: user.name, image: user.image, cardSeed: user.cardSeed, bingoVerifiedAt: user.bingoVerifiedAt, bingoVerifiedBy: user.bingoVerifiedBy })
+    .from(user)
+    .where(eq(user.id, params.id))
+    .limit(1);
   if (!target) throw error(404, 'User not found');
 
   const { tiles, completed, hasBingo, winningPositions } = await loadBingoState(
@@ -36,7 +47,6 @@ export const load: PageServerLoad = async ({ params }) => {
     target: {
       id: target.id,
       name: target.name,
-      email: target.email,
       image: target.image,
       bingoVerifiedAt: target.bingoVerifiedAt,
       bingoVerifiedBy: target.bingoVerifiedBy
@@ -53,9 +63,13 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
   verify: async ({ params, locals }) => {
-    if (!locals.user) throw error(401, 'Unauthorized');
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
 
-    const [target] = await db.select().from(user).where(eq(user.id, params.id)).limit(1);
+    const [target] = await db
+      .select({ id: user.id, cardSeed: user.cardSeed })
+      .from(user)
+      .where(eq(user.id, params.id))
+      .limit(1);
     if (!target) return fail(404, { message: 'User not found' });
 
     const { hasBingo } = await loadBingoState(target.id, target.cardSeed);
@@ -63,6 +77,7 @@ export const actions: Actions = {
       return fail(400, { message: 'Player no longer has a bingo — refresh and re-check.' });
     }
 
+    if (!locals.user) throw error(403, 'Admin access required');
     await db
       .update(user)
       .set({
@@ -74,7 +89,8 @@ export const actions: Actions = {
     return { ok: true, verified: true };
   },
 
-  unverify: async ({ params }) => {
+  unverify: async ({ params, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     await db
       .update(user)
       .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
@@ -82,7 +98,8 @@ export const actions: Actions = {
     return { ok: true, verified: false };
   },
 
-  reset: async ({ params }) => {
+  reset: async ({ params, locals }) => {
+    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
     await db.delete(bingoProgress).where(eq(bingoProgress.userId, params.id));
     await db
       .update(user)

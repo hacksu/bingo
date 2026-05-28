@@ -35,7 +35,6 @@
       <tr>
         <th class="px-4 py-2">Status</th>
         <th class="px-4 py-2">Player</th>
-        <th class="px-4 py-2">Email</th>
         <th class="px-4 py-2">Role</th>
         <th class="px-4 py-2">Progress</th>
         <th class="px-4 py-2"></th>
@@ -66,7 +65,6 @@
             {/if}
           </td>
           <td class="px-4 py-2 font-semibold text-slate-100">{u.name}</td>
-          <td class="px-4 py-2 text-slate-300">{u.email}</td>
           <td class="px-4 py-2">
             <span
               class="rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide

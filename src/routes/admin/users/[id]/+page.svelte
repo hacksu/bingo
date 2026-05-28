@@ -24,7 +24,6 @@
   {/if}
   <div>
     <h1 class="text-2xl font-extrabold tracking-tight">{data.target.name}</h1>
-    <p class="text-sm text-slate-300">{data.target.email}</p>
   </div>
   <span class="ml-auto rounded-md bg-white/5 border border-white/10 px-3 py-1 text-sm text-slate-200">
     {completedCount} / {data.tiles.filter((t) => !t.isFreeSpace).length} marked

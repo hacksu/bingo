@@ -31,10 +31,13 @@ async function ensureCardSeed(userId: string, existing: string | null): Promise<
 export const load: PageServerLoad = async ({ locals }) => {
   if (!locals.user) throw redirect(302, '/login');
 
-  const tiles = await db.select().from(bingoTile).orderBy(bingoTile.position);
+  const tiles = await db
+    .select({ id: bingoTile.id, label: bingoTile.label, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace, isActive: bingoTile.isActive })
+    .from(bingoTile)
+    .orderBy(bingoTile.position);
 
   const progress = await db
-    .select()
+    .select({ tileId: bingoProgress.tileId })
     .from(bingoProgress)
     .where(eq(bingoProgress.userId, locals.user.id));
 
@@ -53,8 +56,6 @@ export const load: PageServerLoad = async ({ locals }) => {
 
   const completed = new Set(progress.map((p) => p.tileId));
 
-  // After shuffling, the "displayed position" of a tile is its index in `ordered`,
-  // not its global `tile.position`. Bingo detection runs on those indices.
   const completedPositions = new Set<number>();
   ordered.forEach((t, idx) => {
     if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(idx);
@@ -81,13 +82,17 @@ export const actions: Actions = {
     const tileId = form.get('tileId');
     if (typeof tileId !== 'string' || !tileId) return fail(400, { message: 'tileId required' });
 
-    const [tile] = await db.select().from(bingoTile).where(eq(bingoTile.id, tileId)).limit(1);
+    const [tile] = await db
+      .select({ isActive: bingoTile.isActive, isFreeSpace: bingoTile.isFreeSpace })
+      .from(bingoTile)
+      .where(eq(bingoTile.id, tileId))
+      .limit(1);
     if (!tile) return fail(404, { message: 'tile not found' });
     if (!tile.isActive) return fail(403, { message: 'tile is locked' });
     if (tile.isFreeSpace) return { ok: true };
 
     const existing = await db
-      .select()
+      .select({ id: bingoProgress.id })
       .from(bingoProgress)
       .where(and(eq(bingoProgress.userId, locals.user.id), eq(bingoProgress.tileId, tileId)))
       .limit(1);
