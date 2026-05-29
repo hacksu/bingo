@@ -12,8 +12,8 @@
 
   <section class="mx-auto max-w-3xl text-center space-y-6">
     
-    <h1 class="text-5xl font-extrabold tracking-tight">
-      <img src="/hacksu_logo.svg" alt="HACKSU logo" class="h-60 w-auto inline-block mr-3 -mt-2" />
+    <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight">
+      <img src="/hacksu_logo.svg" alt="HACKSU logo" class="h-36 sm:h-60 w-auto inline-block mr-3 -mt-2" />
       <br />
       Semester
       Bingo
@@ -37,6 +37,15 @@
         Sign in to play
       </a>
     {/if}
+
+    <div class="flex justify-center items-end gap-8 md:hidden">
+      <div style="transform: rotate(-8deg);">
+        <RobotGreen size="96px" animated />
+      </div>
+      <div style="transform: rotate(8deg);">
+        <RobotBlue size="96px" animated />
+      </div>
+    </div>
   </section>
 
   <div class="hidden md:block" style="transform: rotate(8deg);">

@@ -96,13 +96,13 @@
 {/if}
 
 <div
-  class="grid gap-3 sm:gap-4 mx-auto max-w-3xl"
+  class="grid gap-2 sm:gap-3 mx-auto max-w-3xl"
   style="grid-template-columns: repeat({GRID_SIZE}, minmax(0, 1fr));"
 >
   {#each data.tiles as tile (tile.id)}
     <div
-      class="aspect-square w-full rounded-full flex items-center justify-center text-center
-             text-[0.7rem] sm:text-xs font-bold leading-tight p-2
+      class="aspect-square w-full rounded-lg sm:rounded-full flex items-center justify-center text-center
+             text-[0.7rem] sm:text-xs font-bold leading-tight p-1.5 sm:p-2
              {!tile.isActive
         ? 'bg-slate-800/60 text-slate-400 border border-slate-600/40'
         : tile.completed

@@ -29,7 +29,60 @@
   </div>
 {/if}
 
-<div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5">
+<div class="sm:hidden space-y-3">
+  {#each data.users as u (u.id)}
+    <div
+      class="rounded-lg border px-4 py-3 {u.hasBingo && !u.verified
+        ? 'bg-amber-400/10 border-amber-400/30'
+        : u.verified
+          ? 'bg-emerald-400/5 border-emerald-400/20'
+          : 'bg-white/5 border-white/10'}"
+    >
+      <div class="flex items-center justify-between mb-2">
+        <div>
+          <div class="font-semibold text-slate-100">{u.name}</div>
+          <div class="flex items-center gap-2 mt-0.5">
+            <span
+              class="rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide
+                     {u.role === 'admin'
+                ? 'bg-amber-500/20 border border-amber-400/40 text-amber-200'
+                : 'bg-white/5 border border-white/10 text-slate-300'}"
+            >
+              {u.role}
+            </span>
+            <span class="text-xs text-slate-400">{u.completed} / {data.tileCount}</span>
+          </div>
+        </div>
+        {#if u.verified}
+          <span
+            class="rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-200 px-2 py-0.5 text-xs font-semibold tracking-wide"
+          >
+            VERIFIED
+          </span>
+        {:else if u.hasBingo}
+          <span
+            class="rounded-full bg-amber-500/20 border border-amber-400/40 text-amber-200 px-2 py-0.5 text-xs font-semibold tracking-wide"
+          >
+            BINGO
+          </span>
+        {/if}
+      </div>
+      <a
+        href="/admin/users/{u.id}"
+        class="block w-full text-center rounded-md px-3 py-1.5 text-sm font-semibold transition
+               {u.hasBingo && !u.verified
+          ? 'bg-amber-400 text-amber-950 hover:bg-amber-300'
+          : u.verified
+            ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-100 hover:bg-emerald-500/30'
+            : 'bg-white/10 border border-white/10 text-slate-100 hover:bg-white/15'}"
+      >
+        {u.hasBingo && !u.verified ? 'Verify' : 'View'}
+      </a>
+    </div>
+  {/each}
+</div>
+
+<div class="hidden sm:block overflow-x-auto rounded-lg border border-white/10 bg-white/5">
   <table class="w-full text-sm">
     <thead class="bg-white/5 text-left text-slate-300 uppercase text-xs tracking-wider">
       <tr>

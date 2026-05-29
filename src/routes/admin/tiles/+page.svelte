@@ -137,7 +137,68 @@
   {/each}
 </div>
 
-<div class="overflow-x-auto rounded-lg border border-white/10 bg-white/5">
+<div class="sm:hidden space-y-3">
+  {#each data.tiles as tile (tile.id)}
+    <div class="rounded-lg border border-white/10 bg-white/5 p-3 space-y-2">
+      <form method="POST" action="?/update" use:enhance class="space-y-2">
+        <input type="hidden" name="id" value={tile.id} />
+        <input
+          type="text"
+          name="label"
+          value={tile.label}
+          required
+          class="w-full rounded-md bg-slate-900/60 border border-white/10 text-slate-100 px-3 py-2 text-sm"
+        />
+        <div class="flex items-center gap-4 text-sm text-slate-300">
+          <label class="flex items-center gap-1.5">
+            Pos
+            <input
+              type="number"
+              name="position"
+              value={tile.position}
+              min="0"
+              class="w-16 rounded-md bg-slate-900/60 border border-white/10 text-slate-100 px-2 py-1 text-sm"
+            />
+          </label>
+          <label class="flex items-center gap-1.5">
+            <input type="checkbox" name="isActive" checked={tile.isActive} />
+            Active
+          </label>
+          <label class="flex items-center gap-1.5">
+            <input type="checkbox" name="isFreeSpace" checked={tile.isFreeSpace} />
+            Free
+          </label>
+        </div>
+        <button
+          type="submit"
+          class="w-full rounded-md bg-emerald-500 text-emerald-950 font-semibold px-3 py-1.5 text-sm hover:bg-emerald-400 transition"
+        >
+          Save
+        </button>
+      </form>
+      <form
+        method="POST"
+        action="?/delete"
+        use:enhance={() => {
+          return async ({ update }) => update();
+        }}
+        onsubmit={(e) => {
+          if (!confirm(`Delete this tile?`)) e.preventDefault();
+        }}
+      >
+        <input type="hidden" name="id" value={tile.id} />
+        <button
+          type="submit"
+          class="w-full rounded-md bg-rose-500/80 text-white font-semibold px-3 py-1.5 text-sm hover:bg-rose-500 transition"
+        >
+          Delete
+        </button>
+      </form>
+    </div>
+  {/each}
+</div>
+
+<div class="hidden sm:block overflow-x-auto rounded-lg border border-white/10 bg-white/5">
   <table class="w-full text-sm">
     <thead class="bg-white/5 text-left text-slate-300 uppercase text-xs tracking-wider">
       <tr>
