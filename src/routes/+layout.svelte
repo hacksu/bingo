@@ -22,6 +22,7 @@
         <a href="/admin" class="text-sm hover:text-amber-200 text-amber-300 transition">Admin</a>
       {/if}
       <nav class="hidden sm:flex items-center gap-4 text-sm">
+        <a href="/leaderboard" class="hover:text-white text-slate-300 transition">Leaderboard</a>
         {#if data.user}
           <a href="/bingo" class="hover:text-white text-slate-300 transition">My Card</a>
           <button
@@ -42,6 +43,12 @@
     </div>
   </div>
   <div class="sm:hidden flex gap-2 px-6 pb-3">
+    <a
+      href="/leaderboard"
+      class="flex-1 text-center rounded-md bg-white/5 border border-white/10 text-slate-300 hover:text-white px-3 py-1.5 text-sm font-medium transition"
+    >
+      Leaderboard
+    </a>
     {#if data.user}
       <a
         href="/bingo"
