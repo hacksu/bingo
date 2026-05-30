@@ -1,6 +1,8 @@
 <!-- src/routes/leaderboard/+page.svelte -->
 <script lang="ts">
   import { livePoll } from '$lib/livePoll.svelte';
+  import RobotGreen from '$lib/RobotGreen.svelte';
+  import RobotBlue from '$lib/RobotBlue.svelte';
 
   let { data } = $props();
 
@@ -117,4 +119,13 @@
       </table>
     </div>
   {/if}
+
+  <div class="flex justify-center items-end gap-8 md:hidden">
+    <div style="transform: rotate(-8deg);">
+      <RobotGreen size="96px" animated />
+    </div>
+    <div style="transform: rotate(8deg);">
+      <RobotBlue size="96px" animated />
+    </div>
+  </div>
 </section>

@@ -124,6 +124,15 @@
       {/if}
     </div>
   {/if}
+
+  <div class="flex justify-center items-end gap-8 lg:hidden">
+    <div style="transform: rotate(-8deg);">
+      <RobotGreen size="96px" animated />
+    </div>
+    <div style="transform: rotate(8deg);">
+      <RobotBlue size="96px" animated />
+    </div>
+  </div>
   </section>
 
   <div class="hidden lg:block">
