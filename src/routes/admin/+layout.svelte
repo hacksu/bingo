@@ -7,6 +7,7 @@
     <span class="text-xl font-extrabold tracking-tight text-amber-200">Admin</span>
     <a href="/admin" class="text-slate-300 hover:text-white transition">Users</a>
     <a href="/admin/tiles" class="text-slate-300 hover:text-white transition">Tiles</a>
+    <a href="/admin/activity" class="text-slate-300 hover:text-white transition">Activity</a>
   </nav>
   {@render children()}
 </section>

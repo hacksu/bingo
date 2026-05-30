@@ -7,6 +7,7 @@ import { sql } from 'drizzle-orm';
 import { detectBingo } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
+import { logActivity } from '$lib/server/activity';
 
 async function resetUserBoard(userId: string, regenerateSeed: boolean): Promise<void> {
   await db.delete(bingoProgress).where(eq(bingoProgress.userId, userId));
@@ -83,7 +84,7 @@ export const actions: Actions = {
     if (typeof tileId !== 'string' || !tileId) return fail(400, { message: 'tileId required' });
 
     const [tile] = await db
-      .select({ isActive: bingoTile.isActive, isFreeSpace: bingoTile.isFreeSpace })
+      .select({ label: bingoTile.label, isActive: bingoTile.isActive, isFreeSpace: bingoTile.isFreeSpace })
       .from(bingoTile)
       .where(eq(bingoTile.id, tileId))
       .limit(1);
@@ -109,6 +110,8 @@ export const actions: Actions = {
       userId: locals.user.id,
       tileId
     });
+
+    await logActivity({ userId: locals.user.id, type: 'tile_complete', detail: tile.label });
 
     return { ok: true, completed: true };
   },

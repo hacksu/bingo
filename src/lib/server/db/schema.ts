@@ -1,4 +1,4 @@
-import { pgTable, text, timestamp, boolean, integer, uniqueIndex } from 'drizzle-orm/pg-core';
+import { pgTable, text, timestamp, boolean, integer, uniqueIndex, index } from 'drizzle-orm/pg-core';
 
 // ─── Better Auth tables ─────────────────────────────────────────────────────
 // Schema shape required by better-auth's drizzle adapter.
@@ -88,3 +88,23 @@ export const bingoProgress = pgTable(
 export type User = typeof user.$inferSelect;
 export type BingoTile = typeof bingoTile.$inferSelect;
 export type BingoProgress = typeof bingoProgress.$inferSelect;
+
+// ─── Activity log ───────────────────────────────────────────────────────────
+
+export const activityLog = pgTable(
+  'activity_log',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    type: text('type').notNull(), // 'login' | 'logout' | 'tile_complete'
+    detail: text('detail'), // tile label snapshot for tile_complete; null otherwise
+    createdAt: timestamp('created_at').notNull().defaultNow()
+  },
+  (t) => ({
+    createdAtIdx: index('activity_log_created_at_idx').on(t.createdAt)
+  })
+);
+
+export type ActivityLog = typeof activityLog.$inferSelect;
