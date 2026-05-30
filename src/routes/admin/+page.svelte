@@ -1,5 +1,9 @@
 <script lang="ts">
+  import { livePoll } from '$lib/livePoll.svelte';
+
   let { data } = $props();
+
+  livePoll('app:admin');
 </script>
 
 <header class="space-y-1 text-center">
