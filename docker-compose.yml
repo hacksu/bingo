@@ -33,13 +33,8 @@ services:
     entrypoint: ["sh", "-c"]
     command:
       - |
-        COUNT=$$(bun -e "import postgres from 'postgres'; const sql=postgres(process.env.DATABASE_URL); const r=await sql\`select count(*)::int as c from information_schema.tables where table_schema='public'\`; process.stdout.write(String(r[0].c)); await sql.end()")
-        if [ "$$COUNT" = "0" ]; then
-          echo "[db-init] empty DB — pushing schema"
-          bunx drizzle-kit push --force
-        else
-          echo "[db-init] $$COUNT tables present — skipping"
-        fi
+        echo "[db-init] applying schema (drizzle-kit push)"
+        bunx drizzle-kit push --force
 
   app:
     build:
