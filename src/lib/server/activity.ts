@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { db } from './db';
 import { activityLog } from './db/schema';
 
-export type ActivityType = 'login' | 'logout' | 'tile_complete';
+import type { ActivityType } from '$lib/activityMeta';
+export type { ActivityType };
 
 /**
  * Best-effort append to the activity log. Never throws: a logging failure must not

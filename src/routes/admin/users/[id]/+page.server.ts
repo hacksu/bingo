@@ -6,6 +6,7 @@ import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { detectBingo } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import { isAdmin } from '$lib/server/admin';
+import { logActivity } from '$lib/server/activity';
 import type { Actions, PageServerLoad } from './$types';
 
 async function loadBingoState(targetId: string, seed: string | null) {
@@ -63,10 +64,10 @@ export const load: PageServerLoad = async ({ params }) => {
 
 export const actions: Actions = {
   verify: async ({ params, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
 
     const [target] = await db
-      .select({ id: user.id, cardSeed: user.cardSeed })
+      .select({ id: user.id, name: user.name, cardSeed: user.cardSeed })
       .from(user)
       .where(eq(user.id, params.id))
       .limit(1);
@@ -77,7 +78,6 @@ export const actions: Actions = {
       return fail(400, { message: 'Player no longer has a bingo — refresh and re-check.' });
     }
 
-    if (!locals.user) throw error(403, 'Admin access required');
     await db
       .update(user)
       .set({
@@ -86,20 +86,32 @@ export const actions: Actions = {
         updatedAt: new Date()
       })
       .where(eq(user.id, target.id));
+    await logActivity({ userId: locals.user.id, type: 'admin_verify', detail: target.name });
     return { ok: true, verified: true };
   },
 
   unverify: async ({ params, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
+    const [target] = await db
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, params.id))
+      .limit(1);
     await db
       .update(user)
       .set({ bingoVerifiedAt: null, bingoVerifiedBy: null, updatedAt: new Date() })
       .where(eq(user.id, params.id));
+    await logActivity({ userId: locals.user.id, type: 'admin_unverify', detail: target?.name ?? null });
     return { ok: true, verified: false };
   },
 
   reset: async ({ params, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
+    const [target] = await db
+      .select({ name: user.name })
+      .from(user)
+      .where(eq(user.id, params.id))
+      .limit(1);
     await db.delete(bingoProgress).where(eq(bingoProgress.userId, params.id));
     await db
       .update(user)
@@ -110,6 +122,7 @@ export const actions: Actions = {
         updatedAt: new Date()
       })
       .where(eq(user.id, params.id));
+    await logActivity({ userId: locals.user.id, type: 'admin_reset', detail: target?.name ?? null });
     return { ok: true, reset: true };
   }
 };
