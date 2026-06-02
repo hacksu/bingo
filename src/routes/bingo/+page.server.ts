@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { sql } from 'drizzle-orm';
-import { detectBingo } from '$lib/bingo';
+import { detectBingo, bingoWinTransition } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
 import { logActivity } from '$lib/server/activity';
@@ -20,6 +20,32 @@ async function resetUserBoard(userId: string, regenerateSeed: boolean): Promise<
       updatedAt: new Date()
     })
     .where(eq(user.id, userId));
+}
+
+async function boardPositions(userId: string): Promise<{
+  ordered: { id: string; isFreeSpace: boolean }[];
+  positions: Set<number>;
+}> {
+  const tiles = await db
+    .select({ id: bingoTile.id, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace })
+    .from(bingoTile)
+    .orderBy(bingoTile.position);
+  const [u] = await db
+    .select({ cardSeed: user.cardSeed })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  const progress = await db
+    .select({ tileId: bingoProgress.tileId })
+    .from(bingoProgress)
+    .where(eq(bingoProgress.userId, userId));
+  const completed = new Set(progress.map((p) => p.tileId));
+  const ordered = shuffleTilesForUser(tiles, u?.cardSeed ?? null);
+  const positions = new Set<number>();
+  ordered.forEach((t, idx) => {
+    if (completed.has(t.id) || t.isFreeSpace) positions.add(idx);
+  });
+  return { ordered, positions };
 }
 
 async function ensureCardSeed(userId: string, existing: string | null): Promise<string> {
@@ -102,6 +128,7 @@ export const actions: Actions = {
       await db
         .delete(bingoProgress)
         .where(and(eq(bingoProgress.userId, locals.user.id), eq(bingoProgress.tileId, tileId)));
+      await logActivity({ userId: locals.user.id, type: 'tile_uncomplete', detail: tile.label });
       return { ok: true, completed: false };
     }
 
@@ -113,12 +140,24 @@ export const actions: Actions = {
 
     await logActivity({ userId: locals.user.id, type: 'tile_complete', detail: tile.label });
 
+    const { ordered, positions } = await boardPositions(locals.user.id);
+    const toggledIdx = ordered.findIndex((t) => t.id === tileId);
+    if (toggledIdx >= 0) {
+      const before = new Set(positions);
+      before.delete(toggledIdx);
+      const { justWon, lineLabel } = bingoWinTransition(before, positions);
+      if (justWon) {
+        await logActivity({ userId: locals.user.id, type: 'bingo_win', detail: lineLabel });
+      }
+    }
+
     return { ok: true, completed: true };
   },
 
   reset: async ({ locals }) => {
     if (!locals.user) throw error(401, 'Unauthorized');
     await resetUserBoard(locals.user.id, true);
+    await logActivity({ userId: locals.user.id, type: 'card_reshuffle' });
     return { ok: true, reset: true };
   }
 };

@@ -1,6 +1,17 @@
 <!-- src/routes/admin/activity/+page.svelte -->
 <script lang="ts">
+  import { goto } from '$app/navigation';
+  import { livePoll } from '$lib/livePoll.svelte';
+  import { eventLabel, badgeClass, TYPE_GROUPS, TYPE_LABEL, LIMIT_STEP } from '$lib/activityMeta';
+  import SlideToConfirm from '$lib/SlideToConfirm.svelte';
+
   let { data } = $props();
+
+  livePoll('app:activity');
+
+  let purgeMode = $state<'all' | 'older'>('older');
+  let purgeBefore = $state('');
+  let purgeForm: HTMLFormElement;
 
   function initials(name: string): string {
     return name
@@ -15,28 +26,135 @@
     return new Date(d).toLocaleString();
   }
 
-  function label(type: string, detail: string | null): string {
-    if (type === 'login') return 'Signed in';
-    if (type === 'logout') return 'Signed out';
-    if (type === 'tile_complete') return `Completed "${detail ?? ''}"`;
-    return type;
+  function go(params: URLSearchParams) {
+    const qs = params.toString();
+    goto(qs ? `?${qs}` : '?', { keepFocus: true, noScroll: true });
   }
 
-  function badgeClass(type: string): string {
-    return type === 'tile_complete'
-      ? 'bg-emerald-500/20 border border-emerald-400/40 text-emerald-200'
-      : 'bg-white/5 border border-white/10 text-slate-300';
+  function onTypeChange(e: Event) {
+    const value = (e.currentTarget as HTMLSelectElement).value;
+    const params = new URLSearchParams();
+    if (value) params.set('type', value);
+    if (data.filters.userId) params.set('user', data.filters.userId);
+    go(params);
+  }
+
+  function onUserChange(e: Event) {
+    const value = (e.currentTarget as HTMLSelectElement).value;
+    const params = new URLSearchParams();
+    if (data.filters.type) params.set('type', data.filters.type);
+    if (value) params.set('user', value);
+    go(params);
+  }
+
+  function loadMore() {
+    const params = new URLSearchParams();
+    if (data.filters.type) params.set('type', data.filters.type);
+    if (data.filters.userId) params.set('user', data.filters.userId);
+    params.set('limit', String(data.filters.limit + LIMIT_STEP));
+    go(params);
+  }
+
+  function exportHref(format: 'csv' | 'json'): string {
+    const params = new URLSearchParams();
+    if (data.filters.type) params.set('type', data.filters.type);
+    if (data.filters.userId) params.set('user', data.filters.userId);
+    params.set('format', format);
+    return `/admin/activity/export?${params.toString()}`;
   }
 </script>
 
 <header class="space-y-1 text-center">
   <h1 class="text-3xl font-extrabold tracking-tight">Activity</h1>
-  <p class="text-sm text-slate-300">{data.events.length} most recent events</p>
+  <p class="text-sm text-slate-300">
+    Showing {data.events.length}{data.hasMore ? '+' : ''} events
+  </p>
 </header>
+
+<!-- Controls -->
+<div class="flex flex-wrap items-end gap-3 rounded-lg border border-white/10 bg-white/5 px-4 py-3">
+  <label class="flex flex-col gap-1 text-xs text-slate-300">
+    Type
+    <select
+      class="rounded-md border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100"
+      value={data.filters.type ?? ''}
+      onchange={onTypeChange}
+    >
+      <option value="">All types</option>
+      {#each TYPE_GROUPS as group (group.label)}
+        <optgroup label={group.label}>
+          {#each group.types as t (t)}
+            <option value={t}>{TYPE_LABEL[t]}</option>
+          {/each}
+        </optgroup>
+      {/each}
+    </select>
+  </label>
+
+  <label class="flex flex-col gap-1 text-xs text-slate-300">
+    User
+    <select
+      class="rounded-md border border-white/10 bg-slate-900 px-2 py-1 text-sm text-slate-100"
+      value={data.filters.userId ?? ''}
+      onchange={onUserChange}
+    >
+      <option value="">All users</option>
+      {#each data.users as u (u.id)}
+        <option value={u.id}>{u.name}</option>
+      {/each}
+    </select>
+  </label>
+
+  <div class="ml-auto flex items-end gap-2">
+    <a
+      href={exportHref('csv')}
+      class="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-white/10"
+    >
+      Export CSV
+    </a>
+    <a
+      href={exportHref('json')}
+      class="rounded-md border border-white/10 bg-white/5 px-3 py-1.5 text-sm font-semibold text-slate-100 hover:bg-white/10"
+    >
+      Export JSON
+    </a>
+  </div>
+</div>
+
+<!-- Purge -->
+<details class="rounded-lg border border-rose-400/30 bg-rose-950/20 px-4 py-3">
+  <summary class="cursor-pointer text-sm font-semibold text-rose-200">Purge activity log</summary>
+  <form bind:this={purgeForm} method="POST" action="?/purge" class="mt-3 space-y-3">
+    <div class="flex flex-wrap items-center gap-3 text-sm text-slate-200">
+      <label class="flex items-center gap-2">
+        <input type="radio" name="mode" value="older" bind:group={purgeMode} />
+        Older than
+      </label>
+      <input
+        type="date"
+        name="before"
+        bind:value={purgeBefore}
+        disabled={purgeMode !== 'older'}
+        class="rounded-md border border-white/10 bg-slate-900 px-2 py-1 text-slate-100 disabled:opacity-40"
+      />
+      <label class="flex items-center gap-2">
+        <input type="radio" name="mode" value="all" bind:group={purgeMode} />
+        Everything
+      </label>
+    </div>
+    <SlideToConfirm
+      variant="danger"
+      label="Slide to purge"
+      confirmedLabel="Purging..."
+      disabled={purgeMode === 'older' && !purgeBefore}
+      onconfirm={() => purgeForm.requestSubmit()}
+    />
+  </form>
+</details>
 
 {#if data.events.length === 0}
   <p class="rounded-lg border border-white/10 bg-white/5 px-4 py-8 text-center text-slate-300">
-    No activity yet.
+    No activity matches these filters.
   </p>
 {:else}
   <!-- Mobile: stacked cards -->
@@ -60,7 +178,7 @@
         </div>
         <div class="mt-2">
           <span class="rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide {badgeClass(e.type)}">
-            {label(e.type, e.detail)}
+            {eventLabel(e.type, e.detail)}
           </span>
         </div>
       </div>
@@ -97,7 +215,7 @@
             </td>
             <td class="px-4 py-2">
               <span class="rounded-full px-2 py-0.5 text-xs font-semibold tracking-wide {badgeClass(e.type)}">
-                {label(e.type, e.detail)}
+                {eventLabel(e.type, e.detail)}
               </span>
             </td>
           </tr>
@@ -105,4 +223,16 @@
       </tbody>
     </table>
   </div>
+
+  {#if data.hasMore}
+    <div class="text-center">
+      <button
+        type="button"
+        onclick={loadMore}
+        class="rounded-md border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-100 hover:bg-white/10"
+      >
+        Load more
+      </button>
+    </div>
+  {/if}
 {/if}

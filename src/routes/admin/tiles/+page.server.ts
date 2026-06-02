@@ -5,6 +5,7 @@ import { db } from '$lib/server/db';
 import { bingoTile } from '$lib/server/db/schema';
 import { GRID_SIZE } from '$lib/bingo';
 import { isAdmin } from '$lib/server/admin';
+import { logActivity } from '$lib/server/activity';
 import type { Actions, PageServerLoad } from './$types';
 
 const TARGET_TILES = GRID_SIZE * GRID_SIZE;
@@ -35,7 +36,7 @@ function parseLabels(text: string): string[] {
 
 export const actions: Actions = {
   update: async ({ request, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
     const form = await request.formData();
     const id = parseTileId(form);
     if (!id) return fail(400, { message: 'id required' });
@@ -55,11 +56,12 @@ export const actions: Actions = {
       .update(bingoTile)
       .set({ label, position, isActive, isFreeSpace })
       .where(eq(bingoTile.id, id));
+    await logActivity({ userId: locals.user.id, type: 'tile_update', detail: label });
     return { ok: true };
   },
 
   create: async ({ request, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
     const form = await request.formData();
     const label = String(form.get('label') ?? '').trim();
     if (!label) return fail(400, { message: 'label required' });
@@ -75,20 +77,27 @@ export const actions: Actions = {
       isActive: true,
       isFreeSpace: false
     });
+    await logActivity({ userId: locals.user.id, type: 'tile_create', detail: label });
     return { ok: true };
   },
 
   delete: async ({ request, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
     const form = await request.formData();
     const id = parseTileId(form);
     if (!id) return fail(400, { message: 'id required' });
+    const [tile] = await db
+      .select({ label: bingoTile.label })
+      .from(bingoTile)
+      .where(eq(bingoTile.id, id))
+      .limit(1);
     await db.delete(bingoTile).where(eq(bingoTile.id, id));
+    await logActivity({ userId: locals.user.id, type: 'tile_delete', detail: tile?.label ?? null });
     return { ok: true };
   },
 
   bulkAdd: async ({ request, locals }) => {
-    if (!isAdmin(locals.user)) throw error(403, 'Admin access required');
+    if (!isAdmin(locals.user) || !locals.user) throw error(403, 'Admin access required');
     const form = await request.formData();
     const file = form.get('file');
     if (!(file instanceof File) || file.size === 0) {
@@ -131,6 +140,11 @@ export const actions: Actions = {
       );
     });
 
+    await logActivity({
+      userId: locals.user.id,
+      type: 'tile_bulk_add',
+      detail: `${labels.length} tiles`
+    });
     return { ok: true, form: 'bulkAdd', added: labels.length };
   }
 };
