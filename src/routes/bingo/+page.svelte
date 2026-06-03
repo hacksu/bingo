@@ -1,6 +1,5 @@
 <script lang="ts">
   import { enhance } from '$app/forms';
-  import { GRID_SIZE } from '$lib/bingo';
   import RobotGreen from '$lib/RobotGreen.svelte';
   import RobotBlue from '$lib/RobotBlue.svelte';
 
@@ -23,7 +22,12 @@
       <p class="text-slate-300 text-sm">Tap a tile to mark it complete.</p>
     </header>
 
-  {#if isVerified && data.hasBingo}
+  {#if data.tooFewTiles}
+    <div class="rounded-xl bg-slate-700/40 border border-slate-600/40 text-slate-300 px-5 py-6 text-center">
+      <div class="text-lg font-bold text-slate-200">Not enough tiles yet</div>
+      <p class="text-sm mt-1">At least 25 tiles are needed to generate a bingo card. Check back soon!</p>
+    </div>
+  {:else if isVerified && data.hasBingo}
     <div
       class="rounded-xl bg-emerald-500/15 border border-emerald-400/40 text-emerald-100 px-5 py-4 text-center"
     >
@@ -43,9 +47,10 @@
     </div>
   {/if}
 
+  {#if !data.tooFewTiles}
   <div
     class="grid gap-2 sm:gap-3 mx-auto"
-    style="grid-template-columns: repeat({GRID_SIZE}, minmax(0, 1fr));"
+    style="grid-template-columns: repeat({data.gridSize}, minmax(0, 1fr));"
   >
     {#each data.tiles as tile (tile.id)}
       <form method="POST" action="?/toggle" use:enhance class="aspect-square">
@@ -123,6 +128,7 @@
         </div>
       {/if}
     </div>
+  {/if}
   {/if}
 
   <div class="flex justify-center items-end gap-8 lg:hidden">

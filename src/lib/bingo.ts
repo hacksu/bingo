@@ -1,42 +1,51 @@
-export const MAX_GRID_SIZE = 6;
 export const GRID_SIZE = 5;
 
-if (GRID_SIZE > MAX_GRID_SIZE) {
-  throw new Error(
-    `GRID_SIZE (${GRID_SIZE}) exceeds MAX_GRID_SIZE (${MAX_GRID_SIZE}). Cards are capped at 6x6.`
-  );
+export function effectivePoolSize(tiles: { isFreeSpace: boolean }[]): number {
+  const extraFreeSpaces = Math.max(0, tiles.filter((t) => t.isFreeSpace).length - 1);
+  return tiles.length - extraFreeSpaces;
 }
 
-// All 12 winning lines on a 5x5 board, expressed as tile positions (0..24).
-export const WIN_LINES: number[][] = (() => {
-  const lines: number[][] = [];
-  for (let r = 0; r < GRID_SIZE; r++) {
-    lines.push(Array.from({ length: GRID_SIZE }, (_, c) => r * GRID_SIZE + c));
-  }
-  for (let c = 0; c < GRID_SIZE; c++) {
-    lines.push(Array.from({ length: GRID_SIZE }, (_, r) => r * GRID_SIZE + c));
-  }
-  lines.push(Array.from({ length: GRID_SIZE }, (_, i) => i * GRID_SIZE + i));
-  lines.push(Array.from({ length: GRID_SIZE }, (_, i) => i * GRID_SIZE + (GRID_SIZE - 1 - i)));
-  return lines;
-})();
+export function getCardSize(tileCount: number): number {
+  let size = 5;
+  while ((size + 2) ** 2 <= tileCount) size += 2;
+  return size;
+}
 
-export function detectBingo(completedPositions: Set<number>): {
+export function getWinLines(gridSize: number): number[][] {
+  const lines: number[][] = [];
+  for (let r = 0; r < gridSize; r++) {
+    lines.push(Array.from({ length: gridSize }, (_, c) => r * gridSize + c));
+  }
+  for (let c = 0; c < gridSize; c++) {
+    lines.push(Array.from({ length: gridSize }, (_, r) => r * gridSize + c));
+  }
+  lines.push(Array.from({ length: gridSize }, (_, i) => i * gridSize + i));
+  lines.push(Array.from({ length: gridSize }, (_, i) => i * gridSize + (gridSize - 1 - i)));
+  return lines;
+}
+
+export const WIN_LINES = getWinLines(GRID_SIZE);
+
+export function detectBingo(
+  completedPositions: Set<number>,
+  gridSize: number = GRID_SIZE
+): {
   hasBingo: boolean;
   winningLines: number[][];
   winningPositions: Set<number>;
 } {
-  const winningLines = WIN_LINES.filter((line) => line.every((p) => completedPositions.has(p)));
+  const winLines = getWinLines(gridSize);
+  const winningLines = winLines.filter((line) => line.every((p) => completedPositions.has(p)));
   const winningPositions = new Set<number>(winningLines.flat());
   return { hasBingo: winningLines.length > 0, winningLines, winningPositions };
 }
 
-export function describeWinLine(line: number[]): string {
-  const rows = line.map((p) => Math.floor(p / GRID_SIZE));
-  const cols = line.map((p) => p % GRID_SIZE);
+export function describeWinLine(line: number[], gridSize: number = GRID_SIZE): string {
+  const rows = line.map((p) => Math.floor(p / gridSize));
+  const cols = line.map((p) => p % gridSize);
   if (rows.every((r) => r === rows[0])) return `Row ${rows[0] + 1}`;
   if (cols.every((c) => c === cols[0])) return `Column ${cols[0] + 1}`;
-  if (line.every((p, i) => p === i * GRID_SIZE + i)) return 'Diagonal ↘';
+  if (line.every((p, i) => p === i * gridSize + i)) return 'Diagonal ↘';
   return 'Diagonal ↗';
 }
 
@@ -47,14 +56,15 @@ export function describeWinLine(line: number[]): string {
  */
 export function bingoWinTransition(
   before: Set<number>,
-  after: Set<number>
+  after: Set<number>,
+  gridSize: number = GRID_SIZE
 ): { justWon: boolean; lineLabel: string | null } {
-  const beforeRes = detectBingo(before);
-  const afterRes = detectBingo(after);
+  const beforeRes = detectBingo(before, gridSize);
+  const afterRes = detectBingo(after, gridSize);
   if (!afterRes.hasBingo || beforeRes.hasBingo) {
     return { justWon: false, lineLabel: null };
   }
   const beforeKeys = new Set(beforeRes.winningLines.map((l) => l.join(',')));
   const newLine = afterRes.winningLines.find((l) => !beforeKeys.has(l.join(',')));
-  return { justWon: true, lineLabel: newLine ? describeWinLine(newLine) : null };
+  return { justWon: true, lineLabel: newLine ? describeWinLine(newLine, gridSize) : null };
 }

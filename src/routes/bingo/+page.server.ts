@@ -4,7 +4,7 @@ import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoProgress, bingoTile, user } from '$lib/server/db/schema';
 import { sql } from 'drizzle-orm';
-import { detectBingo, bingoWinTransition } from '$lib/bingo';
+import { detectBingo, bingoWinTransition, getCardSize, effectivePoolSize } from '$lib/bingo';
 import { shuffleTilesForUser } from '$lib/server/cardShuffle';
 import type { Actions, PageServerLoad } from './$types';
 import { logActivity } from '$lib/server/activity';
@@ -25,6 +25,7 @@ async function resetUserBoard(userId: string, regenerateSeed: boolean): Promise<
 async function boardPositions(userId: string): Promise<{
   ordered: { id: string; isFreeSpace: boolean }[];
   positions: Set<number>;
+  cardSize: number;
 }> {
   const tiles = await db
     .select({ id: bingoTile.id, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace })
@@ -40,12 +41,13 @@ async function boardPositions(userId: string): Promise<{
     .from(bingoProgress)
     .where(eq(bingoProgress.userId, userId));
   const completed = new Set(progress.map((p) => p.tileId));
-  const ordered = shuffleTilesForUser(tiles, u?.cardSeed ?? null);
+  const cardSize = getCardSize(effectivePoolSize(tiles));
+  const ordered = shuffleTilesForUser(tiles, u?.cardSeed ?? null, cardSize);
   const positions = new Set<number>();
   ordered.forEach((t, idx) => {
     if (completed.has(t.id) || t.isFreeSpace) positions.add(idx);
   });
-  return { ordered, positions };
+  return { ordered, positions, cardSize };
 }
 
 async function ensureCardSeed(userId: string, existing: string | null): Promise<string> {
@@ -78,8 +80,9 @@ export const load: PageServerLoad = async ({ locals }) => {
     .where(eq(user.id, locals.user.id))
     .limit(1);
 
+  const cardSize = getCardSize(effectivePoolSize(tiles));
   const seed = await ensureCardSeed(locals.user.id, me?.cardSeed ?? null);
-  const ordered = shuffleTilesForUser(tiles, seed);
+  const ordered = shuffleTilesForUser(tiles, seed, cardSize);
 
   const completed = new Set(progress.map((p) => p.tileId));
 
@@ -87,7 +90,7 @@ export const load: PageServerLoad = async ({ locals }) => {
   ordered.forEach((t, idx) => {
     if (completed.has(t.id) || t.isFreeSpace) completedPositions.add(idx);
   });
-  const { hasBingo, winningPositions } = detectBingo(completedPositions);
+  const { hasBingo, winningPositions } = detectBingo(completedPositions, cardSize);
 
   return {
     tiles: ordered.map((t, idx) => ({
@@ -96,6 +99,8 @@ export const load: PageServerLoad = async ({ locals }) => {
       winning: winningPositions.has(idx)
     })),
     hasBingo,
+    gridSize: cardSize,
+    tooFewTiles: tiles.length < 25,
     verifiedAt: me?.bingoVerifiedAt ?? null,
     verifiedBy: me?.bingoVerifiedBy ?? null
   };
@@ -140,12 +145,12 @@ export const actions: Actions = {
 
     await logActivity({ userId: locals.user.id, type: 'tile_complete', detail: tile.label });
 
-    const { ordered, positions } = await boardPositions(locals.user.id);
+    const { ordered, positions, cardSize } = await boardPositions(locals.user.id);
     const toggledIdx = ordered.findIndex((t) => t.id === tileId);
     if (toggledIdx >= 0) {
       const before = new Set(positions);
       before.delete(toggledIdx);
-      const { justWon, lineLabel } = bingoWinTransition(before, positions);
+      const { justWon, lineLabel } = bingoWinTransition(before, positions, cardSize);
       if (justWon) {
         await logActivity({ userId: locals.user.id, type: 'bingo_win', detail: lineLabel });
       }

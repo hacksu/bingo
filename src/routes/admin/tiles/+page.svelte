@@ -84,8 +84,8 @@
     </button>
   </div>
   <p class="text-xs text-slate-400">
-    One label per line. Will be appended to existing tiles. Total must equal exactly {data.target}
-    ({data.gridSize}×{data.gridSize}) after upload — partial cards are rejected.
+    One label per line. Will be appended to existing tiles. Total must reach at least 25 after
+    upload — partial cards are rejected.
   </p>
   {#if bulkError}
     <p class="text-sm text-rose-300 font-semibold">{bulkError}</p>
