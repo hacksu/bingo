@@ -3,22 +3,22 @@ import { eq, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import { db } from '$lib/server/db';
 import { bingoTile } from '$lib/server/db/schema';
-import { GRID_SIZE } from '$lib/bingo';
+import { getCardSize, effectivePoolSize } from '$lib/bingo';
 import { isAdmin } from '$lib/server/admin';
 import { logActivity } from '$lib/server/activity';
 import type { Actions, PageServerLoad } from './$types';
-
-const TARGET_TILES = GRID_SIZE * GRID_SIZE;
 
 export const load: PageServerLoad = async () => {
   const tiles = await db
     .select({ id: bingoTile.id, label: bingoTile.label, position: bingoTile.position, isFreeSpace: bingoTile.isFreeSpace, isActive: bingoTile.isActive })
     .from(bingoTile)
     .orderBy(bingoTile.position);
+  const gridSize = getCardSize(effectivePoolSize(tiles));
+  const target = gridSize * gridSize;
   return {
     tiles,
-    target: TARGET_TILES,
-    gridSize: GRID_SIZE
+    target,
+    gridSize
   };
 };
 
@@ -114,15 +114,16 @@ export const actions: Actions = {
       .select({ id: bingoTile.id, position: bingoTile.position })
       .from(bingoTile);
     const total = existing.length + labels.length;
+    const minTarget = 25;
 
-    if (total < TARGET_TILES) {
-      const short = TARGET_TILES - total;
+    if (total < minTarget) {
+      const short = minTarget - total;
       return fail(400, {
         form: 'bulkAdd',
-        message: `Upload would result in ${total} tiles, short of the ${TARGET_TILES} (${GRID_SIZE}×${GRID_SIZE}) needed for a complete card. Add ${short} more row${short === 1 ? '' : 's'} to your CSV.`,
+        message: `Upload would result in ${total} tiles, short of the ${minTarget} needed for a complete card. Add ${short} more row${short === 1 ? '' : 's'} to your CSV.`,
         existing: existing.length,
         incoming: labels.length,
-        target: TARGET_TILES
+        target: minTarget
       });
     }
 
